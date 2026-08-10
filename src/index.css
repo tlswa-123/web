@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #0a0912;
+  /* 注意：这里不能设 overflow-x: hidden，会让 position: sticky 失效 */
+  font-family:
+    system-ui,
+    -apple-system,
+    "PingFang SC",
+    "Microsoft YaHei",
+    sans-serif;
+}
+
+/* 隐藏滚动条视觉，滚动能力保留 */
+body {
+  scrollbar-width: none;
+}
+body::-webkit-scrollbar {
+  display: none;
+}
+
+img {
+  -webkit-user-drag: none;
+}
+
+/* 画廊进场淡入 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateZ(-200px);
+  }
+  to {
+    opacity: 1;
+    transform: translateZ(0);
+  }
+}
