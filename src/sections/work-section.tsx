@@ -1,220 +1,154 @@
-import { useState } from "react";
-import { CircularGallery, type GalleryItem } from "../components/circular-gallery";
+import { useState, useEffect, useCallback } from "react";
+import { CircularGallery } from "../components/circular-gallery";
 
 /**
- * 作品区 —— 三段式交互
+ * 作品区—— 环形画廊 + 点击弹出 PDF
  *
- * 阶段 1 待机：三个分类卡片并排，带景深（悬停的前移变清晰，其余后退虚化）
- * 阶段 2 推进：点击后被选中的卡片 translateZ 冲向镜头并淡出，其余向两侧退散
- * 阶段 3 陈列：该分类作品以环形画廊呈现，可拖拽/滚轮浏览
- *
- * 景深全部由 CSS perspective + translateZ + blur 实现，不依赖 WebGL。
+ * 6 个作品以环形画廊展示（可拖拽/滚轮横向浏览），
+ * 点击居中的卡片弹出对应 PDF 全屏查看（背景加黑+模糊，可上下滚动 PDF，ESC/叉/遮罩关闭）。
  */
 
-type Category = {
+type Work = {
   id: string;
-  label: string;
-  en: string;
-  desc: string;
-  items: GalleryItem[];
+  title: string;
+  image: string;
+  pdf: string | null;
 };
 
-// 占位内容 —— 等你的真实作品替换（image 字段留空会显示占位块）
-const CATEGORIES: Category[] = [
-  {
-    id: "internship",
-    label: "实习",
-    en: "Internship",
-    desc: "在不同团队里练手的阶段",
-    items: [
-      { id: "i1", title: "某大厂设计中台", meta: "2023 · 交互设计实习" },
-      { id: "i2", title: "电商活动专题页", meta: "2023 · 视觉设计" },
-      { id: "i3", title: "内部工具重构", meta: "2022 · 产品设计" },
-      { id: "i4", title: "品牌视觉延展", meta: "2022 · 平面设计" },
-      { id: "i5", title: "用户调研项目", meta: "2022 · 用户研究" },
-    ],
-  },
-  {
-    id: "projects",
-    label: "作品",
-    en: "Projects",
-    desc: "自己主导完成的完整项目",
-    items: [
-      { id: "p1", title: "音乐播放器概念设计", meta: "2024 · 个人项目" },
-      { id: "p2", title: "城市漫步地图", meta: "2024 · 交互实验" },
-      { id: "p3", title: "字体排印实验集", meta: "2023 · 平面" },
-      { id: "p4", title: "低多边形插画系列", meta: "2023 · 插画" },
-      { id: "p5", title: "动效练习合辑", meta: "2023 · 动效" },
-      { id: "p6", title: "摄影集 · 山与海", meta: "2022 · 摄影" },
-    ],
-  },
-  {
-    id: "venture",
-    label: "创业",
-    en: "Venture",
-    desc: "从零开始搭起来的东西",
-    items: [
-      { id: "v1", title: "独立产品 · 待补充", meta: "2025 · 联合创始人" },
-      { id: "v2", title: "品牌从零搭建", meta: "2025 · 品牌设计" },
-      { id: "v3", title: "增长落地页系列", meta: "2024 · 产品设计" },
-      { id: "v4", title: "团队协作流程设计", meta: "2024 · 运营" },
-    ],
-  },
+const WORKS: Work[] = [
+  { id: "cardia", title: "ACarDiA", image: "/works/cardia.png", pdf: "/works/cardia.pdf" },
+  { id: "lumobird", title: "Lumobird", image: "/works/lumobird.png", pdf: null },
+  { id: "memory", title: "Memory", image: "/works/memory.png", pdf: "/works/memory.pdf" },
+  { id: "moodoo", title: "Moodoo", image: "/works/moodoo.png", pdf: "/works/moodoo.pdf" },
+  { id: "musaic", title: "Musaic", image: "/works/musaic.png", pdf: "/works/musaic.pdf" },
+  { id: "scribe", title: "Scribe", image: "/works/scribe.png", pdf: "/works/scribe.pdf" },
 ];
 
-// 三张卡片的待机横向位置（用于景深错落）
-const BASE_X = [-1, 0, 1];
+// 转换为画廊所需格式
+const GALLERY_ITEMS = WORKS.map((w) => ({
+  id: w.id,
+  title: w.title,
+  meta: "",
+  image: w.image,
+}));
 
 export function WorkSection() {
-  // null = 待机；string = 已进入某分类
-  const [active, setActive] = useState<string | null>(null);
-  // 正在推进中的分类（播放镜头动画）
-  const [entering, setEntering] = useState<string | null>(null);
-  const [hover, setHover] = useState<string | null>(null);
+  const [viewing, setViewing] = useState<Work | null>(null);
 
-  const enter = (id: string) => {
-    setEntering(id);
-    // 镜头推进动画时长 900ms，结束后切换到画廊
-    window.setTimeout(() => {
-      setActive(id);
-      setEntering(null);
-    }, 900);
-  };
+  const close = useCallback(() => setViewing(null), []);
 
-  const back = () => {
-    setActive(null);
-    setHover(null);
-  };
+  // ESC 关闭
+  useEffect(() => {
+    if (!viewing) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [viewing, close]);
 
-  const current = CATEGORIES.find((c) => c.id === active);
+  // 弹窗时禁止背景滚动
+  useEffect(() => {
+    if (viewing) {
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
+    } else {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+    };
+  }, [viewing]);
+
+  // 画廊中居中卡片被点击的回调
+  const handleItemClick = useCallback((id: string) => {
+    const work = WORKS.find((w) => w.id === id);
+    if (work?.pdf) {
+      setViewing(work);
+    }
+  }, []);
 
   return (
     <section
       id="work"
-      className="relative z-10 min-h-svh overflow-hidden bg-[#080711] px-6 py-24 text-white"
+    className="relative z-10 min-h-svh overflow-hidden px-6 py-24 text-white"
     >
+      {/* 背景：场景图第二个白框区域 + 暗层 */}
+      <div className="absolute inset-0 -z-10">
+    <img
+    src="/works/work-bg.png"
+          alt=""
+     className="h-full w-full object-cover"
+     draggable={false}
+        />
+        <div className="absolute inset-0 bg-black/70" />
+      </div>
       <div className="mx-auto max-w-6xl">
-        {/* 标题行 */}
-        <div className="mb-12 flex items-end justify-between gap-6">
-          <div>
-            <p className="mb-2 text-sm tracking-[0.3em] text-white/45 uppercase">
-              Selected Work
-            </p>
-            <h2 className="text-4xl font-semibold md:text-5xl">
-              {current ? current.label : "作品"}
-            </h2>
-            {current && (
-              <p className="mt-3 text-white/55">{current.desc}</p>
-            )}
-          </div>
-          {current && (
-            <button
-              onClick={back}
-              className="shrink-0 rounded-full border border-white/25 px-5 py-2 text-sm text-white/75 transition hover:border-white/60 hover:text-white"
-            >
-              ← 返回分类
-            </button>
-          )}
+        {/* 标题 */}
+        <div className="mb-12">
+          <p className="mb-2 text-sm tracking-[0.3em] text-white/45 uppercase">
+            Selected Work
+          </p>
+          <h2 className="text-4xl font-semibold md:text-5xl">作品</h2>
         </div>
 
-        {/* 阶段 1 + 2：分类入口（景深 + 镜头推进） */}
-        {!active && (
-          <div
-            className="relative h-[520px]"
-            style={{ perspective: "1200px", perspectiveOrigin: "50% 50%" }}
-            onMouseLeave={() => setHover(null)}
-          >
-            <div
-              className="absolute inset-0 flex items-center justify-center gap-8"
-              style={{ transformStyle: "preserve-3d" }}
-            >
-              {CATEGORIES.map((cat, i) => {
-                const isHover = hover === cat.id;
-                const isEntering = entering === cat.id;
-                const othersEntering = entering !== null && !isEntering;
-
-                // 待机景深：悬停的前移放大变清晰，其余后退虚化
-                let z = isHover ? 120 : hover ? -140 : 0;
-                let blur = isHover ? 0 : hover ? 3.5 : 0;
-                let opacity = isHover ? 1 : hover ? 0.45 : 1;
-                let x = BASE_X[i] * 0;
-                let scale = 1;
-
-                // 阶段 2 镜头推进：被点的冲向镜头淡出，其余向两侧退散
-                if (isEntering) {
-                  z = 900;
-                  blur = 14;
-                  opacity = 0;
-                  scale = 1.15;
-                } else if (othersEntering) {
-                  x = BASE_X[i] * 520;
-                  z = -420;
-                  blur = 9;
-                  opacity = 0;
-                }
-
-                return (
-                  <button
-                    key={cat.id}
-                    onMouseEnter={() => !entering && setHover(cat.id)}
-                    onClick={() => !entering && enter(cat.id)}
-                    className="group relative h-[440px] w-[300px] shrink-0 overflow-hidden rounded-3xl border border-white/15 bg-[#1b1a2e] text-left"
-                    style={{
-                      transform: `translate3d(${x}px, 0, ${z}px) scale(${scale})`,
-                      filter: `blur(${blur}px)`,
-                      opacity,
-                      transition:
-                        "transform 900ms cubic-bezier(0.32,0.72,0,1), filter 700ms ease, opacity 700ms ease",
-                      transformStyle: "preserve-3d",
-                    }}
-                  >
-                    {/* 悬停高亮底 */}
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#ff8a4c]/0 transition-colors duration-500 group-hover:to-[#ff8a4c]/25" />
-
-                    <div className="relative z-10 flex h-full flex-col justify-between p-8">
-                      <div>
-                        <p className="text-xs tracking-[0.3em] text-white/40 uppercase">
-                          {cat.en}
-                        </p>
-                        <h3 className="mt-3 text-3xl font-semibold">
-                          {cat.label}
-                        </h3>
-                        <p className="mt-3 text-sm text-white/55">{cat.desc}</p>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-white/45">
-                          {cat.items.length} 个项目
-                        </span>
-                        <span className="text-lg text-white/70 transition-transform duration-300 group-hover:translate-x-1">
-                          →
-                        </span>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            {!entering && (
-              <p className="absolute bottom-0 left-1/2 -translate-x-1/2 text-xs tracking-[0.25em] text-white/35">
-                点击任一分类进入
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* 阶段 3：环形画廊（全宽显示，两侧卡片不被裁切） */}
-        {current && (
-          <div className="animate-[fadeIn_700ms_ease-out]">
-            <div className="relative left-1/2 w-screen -translate-x-1/2">
-              <CircularGallery items={current.items} bend={3} />
-            </div>
-            <p className="mt-6 text-center text-xs tracking-[0.25em] text-white/35">
-              拖拽或滚动浏览 · 点击侧边作品居中
-            </p>
-          </div>
-        )}
+        {/* 环形画廊 */}
+        <div className="relative left-1/2 w-screen -translate-x-1/2">
+          <CircularGallery
+            items={GALLERY_ITEMS}
+            bend={3}
+            onItemClick={handleItemClick}
+          />
+        </div>
+        <p className="mt-6 text-center text-xs tracking-[0.25em] text-white/35">
+          拖拽或滚动浏览 · 点击作品查看详情
+        </p>
       </div>
+
+      {/* PDF 弹窗遮罩 */}
+      {viewing && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={close}
+          style={{ isolation: "isolate" }}
+        >
+          {/* PDF 容器 */}
+          <div
+            className="relative h-[90svh] w-[90vw] max-w-4xl overflow-hidden rounded-xl bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 关闭按钮 */}
+            <button
+              onClick={close}
+              className="absolute right-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-black/70 text-white transition-colors hover:bg-black/90"
+              aria-label="关闭"
+              type="button"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 18 18"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              >
+                <line x1="4" y1="4" x2="14" y2="14" />
+                <line x1="14" y1="4" x2="4" y2="14" />
+              </svg>
+            </button>
+
+            {/* PDF iframe */}
+            <iframe
+              src={viewing.pdf!}
+              title={viewing.title}
+              className="h-full w-full border-0"
+            />
+          </div>
+        </div>
+      )}
     </section>
   );
 }
