@@ -65,9 +65,14 @@ export function CircularGallery({ items, bend = 3, onItemClick }: Props) {
     ensureRef.current = ensure;
 
     const onWheel = (e: WheelEvent) => {
+      // 【关键修复】只拦截明确的"横向"滚动手势（触控板横滑/shift+滚轮），
+      // 让普通纵向滚轮完全放行去驱动页面滚动。之前对所有wheel事件都
+      // preventDefault+stopPropagation，导致鼠标停在画廊上方时页面
+      // 彻底无法继续下滑（画廊铺满整屏，用户必然会滚到它上面）。
+      if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
       e.preventDefault();
       e.stopPropagation();
-  target.current += (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) * 0.8;
+      target.current += e.deltaX * 0.8;
       ensure();
     };
 

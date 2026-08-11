@@ -1,12 +1,14 @@
 import { useRef } from "react";
 import { useScrollProgress } from "../hooks/use-scroll-progress";
+import { useEntryReveal } from "../hooks/use-entry-reveal";
 
 /**
- * 简历页 —— 回到正确的卡片堆叠
+ * 简历页 —— 卡片堆叠
  *
- * 背景：absolute铺满 section（不占空间）
- * 内容：正常文档流，卡片各自sticky
- * 没有外层 overflow-hidden 的 sticky 容器（那个会破坏内部 sticky）
+ * 背景：section 自身设 background（固定不动），暗层覆盖
+ * 内容：正常文档流，卡片各自 sticky
+ * 头部内容（标题+头像）用 useEntryReveal 做淡入+上浮，紧接着 hero 的
+ * 变暗时刻开始渐显，避免"下滑好一段才突然冒出来"的生硬感
  */
 
 const TITLE_BAR = 100;
@@ -33,7 +35,7 @@ const RESUME_ITEMS: ResumeItem[] = [
     tags: ["985", "QS54", "GPA 3.72"],
   },
   {
-    title: "腾讯 WXG ·兴趣岛 · B端起步",
+    title: "腾讯 WXG · 兴趣岛 · B端起步",
     subtitle: "三段实习，从画界面到定方向",
     desc: "在腾讯做 AI 游戏生成平台的产品策划，负责核心页面和测评体系设计。在兴趣岛主导唱歌工具三个版本从规划到上线。最早从 B 端系统入行，学会拆需求和跑流程。",
     tags: ["AI 产品", "工具迭代", "全流程"],
@@ -55,29 +57,39 @@ const RESUME_ITEMS: ResumeItem[] = [
 export function ResumeSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const progress = useScrollProgress(sectionRef);
+  const reveal = useEntryReveal(sectionRef);
 
   const outerRing = progress * 360;
   const innerRing = progress * -360;
+
+  // 头部内容淡入 + 上浮：从 reveal=0.15 开始到 0.55 完全显现
+  // （对应hero暗层从0.9~1.0渐入的那段时间窗口，让内容跟着暗层同步浮现）
+  const headerReveal = Math.min(1, Math.max(0, (reveal - 0.15) / 0.4));
 
   return (
     <section
       ref={sectionRef}
       id="resume"
       className="relative z-10 text-white"
+      style={{
+        backgroundImage: "url(/parallax/resume-bg.png)",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      }}
     >
-      {/* 背景：absolute 铺满 section，不占空间 */}
-      <div className="absolute inset-0 -z-10">
-        <img
-          src="/parallax/resume-bg.png"
-          alt=""
-          className="sticky top-0 h-svh w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-[#12111f]/75" />
-      </div>
+      {/* 暗层：覆盖整个 section */}
+      <div className="pointer-events-none absolute inset-0 z-[1] bg-[#12111f]/75" />
 
-      {/* 区块标题 */}
-      <div className="mx-auto max-w-6xl px-6 pt-24 pb-6">
-        <p className="mb-2 text-sm tracking-[0.3em] text-white/45uppercase">
+      {/* 区块标题：随入场进度渐显+微上浮，紧跟 hero 变暗的节奏浮现 */}
+      <div
+        className="relative z-10 mx-auto max-w-6xl px-6 pt-24 pb-6"
+        style={{
+          opacity: headerReveal,
+          transform: `translateY(${(1 - headerReveal) * 24}px)`,
+        }}
+      >
+        <p className="mb-2 text-sm tracking-[0.3em] text-white/45 uppercase">
           About
         </p>
         <h2 className="text-3xl font-semibold md:text-5xl">
@@ -89,10 +101,16 @@ export function ResumeSection() {
       </div>
 
       {/* 左右分栏 */}
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-6 md:grid-cols-[280px_1fr] md:gap-12">
+      <div className="relative z-10 mx-auto grid max-w-6xl grid-cols-1 gap-8 px-6 md:grid-cols-[280px_1fr] md:gap-12">
         {/* 左栏：头像 + 旋转环 + 基本信息（sticky） */}
         <div className="hidden md:block">
-          <div className="sticky top-[18svh] flex flex-col items-center pt-4">
+          <div
+            className="sticky top-[18svh] flex flex-col items-center pt-4"
+            style={{
+              opacity: headerReveal,
+              transform: `translateY(${(1 - headerReveal) * 24}px)`,
+            }}
+          >
             <div className="relative flex items-center justify-center">
               <div
                 className="absolute h-[200px] w-[200px] rounded-full border border-dashed border-[#ff8a4c]/50"
@@ -110,7 +128,7 @@ export function ResumeSection() {
             <div className="mt-8 text-center">
               <h3 className="text-2xl font-semibold">金玺</h3>
               <p className="mt-1 text-sm text-white/45">Jin Xi</p>
-              <div className="mt-5 flex flex-col gap-2text-sm text-white/55">
+              <div className="mt-5 flex flex-col gap-2 text-sm text-white/55">
                 <span>港理工MSc 在读</span>
                 <span>腾讯 WXG 产品策划</span>
                 <span>MaiPal 联合创始人</span>
@@ -121,7 +139,7 @@ export function ResumeSection() {
 
         {/* 右栏：卡片堆叠 */}
         <div className="relative pb-[30svh]">
-          <div className="mb-10 flex items-center gap-4md:hidden">
+          <div className="mb-10 flex items-center gap-4 md:hidden">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#1b1a2e] border border-white/15">
               <span className="text-xs text-white/35">头像</span>
             </div>
@@ -141,29 +159,36 @@ export function ResumeSection() {
                 zIndex: index + 1,
                 marginBottom:
                   index === RESUME_ITEMS.length - 1 ? 0 : "5svh",
+                // 第一张卡片是首屏就可见的，跟随入场进度渐显；后面几张
+                // 靠sticky堆叠自然进场，不需要额外处理
+                opacity: index === 0 ? headerReveal : 1,
+                transform:
+                  index === 0
+                    ? `translateY(${(1 - headerReveal) * 24}px)`
+                    : undefined,
               }}
             >
               <div className="pointer-events-none absolute inset-0 origin-left scale-x-0 bg-gradient-to-r from-[#ff8a4c]/80 to-[#ff5e62]/80 transition-transform duration-500 ease-out group-hover:scale-x-100" />
 
-              <div className="relative z-10 flex h-full flex-col px-7 pt-6 pb-7md:px-9 md:pb-9">
+              <div className="relative z-10 flex h-full flex-col px-7 pt-6 pb-7 md:px-9 md:pb-9">
                 <div style={{ minHeight: TITLE_BAR - 48 }}>
                   <h3 className="text-xl font-semibold tracking-tight md:text-2xl">
                     {item.title}
                   </h3>
-                  <p className="mt-1 text-sm text-white/55transition-colors group-hover:text-white/80">
+                  <p className="mt-1 text-sm text-white/55 transition-colors group-hover:text-white/80">
                     {item.subtitle}
                   </p>
                 </div>
 
                 <div className="mt-5 flex flex-1 flex-col justify-between">
-                  <p className="max-w-xl text-base leading-relaxed text-white/70transition-colors group-hover:text-white md:text-lg">
+                  <p className="max-w-xl text-base leading-relaxed text-white/70 transition-colors group-hover:text-white md:text-lg">
                     {item.desc}
                   </p>
                   <div className="mt-5 flex flex-wrap gap-2">
                     {item.tags.map((t) => (
                       <span
                         key={t}
-                        className="rounded-full border border-white/18 px-3 py-1 text-xs text-white/60 transition-colors group-hover:border-white/45group-hover:text-white"
+                        className="rounded-full border border-white/18 px-3 py-1 text-xs text-white/60 transition-colors group-hover:border-white/45 group-hover:text-white"
                       >
                         {t}
                       </span>

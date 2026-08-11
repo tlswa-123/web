@@ -54,8 +54,9 @@ export function HeroParallax() {
   // 太阳随滚动缓缓下落（百分比，相对太阳自身高度）
   const sunDropPct = progress * 80; // 最多下落自身高度的 80%
 
-  // 推进白框
-  const zoomRaw = Math.max(Math.min((progress - 0.25) / 0.6, 1), 0);
+  // 推进白框：在 progress=0.25 开始，正好在 progress=1（section滚动结束）完成
+  // 这样 hero 结束的瞬间立即无缝衔接简历页的暗层内容，没有空白定格期
+  const zoomRaw = Math.max(Math.min((progress - 0.25) / 0.75, 1), 0);
   const zoomP = easeInOut(zoomRaw);
 
   const INIT_TX = -50;
@@ -70,6 +71,14 @@ export function HeroParallax() {
     zoomRaw > 0.05 && zoomRaw < 0.9
       ? Math.min((zoomRaw - 0.05) * 6, 1) * Math.min(1, (0.9 - zoomRaw) * 6)
       : 0;
+
+  // 【衔接修复】sticky 元素在 progress=1 时就会开始"解钉"随页面正常滚动，
+  // 此时画面会冻结在最后一帧，同时下一个 section 从底部露出，两者会同屏
+  // 短暂共存（约 1 屏高度）。如果 hero 最后一帧是"明亮无暗层"而简历页
+  // 是"暗层覆盖"，滑动交接时会出现两套背景同时可见、明暗断层的诡异感。
+  // 因此让暗层在 progress 接近 1 时也淡入到与简历页一致的不透明度，
+  // 使冻结帧和滑入的简历页视觉连续。
+  const darkOpacity = Math.max(0, Math.min((progress - 0.9) / 0.1, 1)) * 0.75;
 
   return (
     <section ref={sectionRef} className="relative h-[320svh] bg-[#12111f]">
@@ -144,6 +153,12 @@ export function HeroParallax() {
             }}
           />
         </div>
+
+        {/* 衔接暗层：跟简历页暗层同色同深度，避免 sticky 解钉时的明暗断层 */}
+        <div
+          className="pointer-events-none absolute inset-0 z-[5]"
+          style={{ backgroundColor: `rgba(18, 17, 31, ${darkOpacity})` }}
+        />
 
         {/* 首页文案 */}
         <div
