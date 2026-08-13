@@ -1,44 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { CircularGallery } from "../components/circular-gallery";
-import { useScrollProgress } from "../hooks/use-scroll-progress";
+import { useEntryReveal } from "../hooks/use-entry-reveal";
 
 /**
- * 作品区—— 镜头从 BOX1 推进到 BOX2 + 暗层淡入 + 环形画廊
+ * 作品区 —— 环形画廊 + 点击弹出 PDF
  *
- * 架构与 hero 完全一致：
- * - section 给足滚动高度（280svh）
- * - sticky 容器 h-svh + overflow-hidden
- * - 内部放 absolute 场景图，用 transform驱动推进
- * - 用 useScrollProgress 读取 section滚动进度
+ * 【重要】背景已迁移到全局唯一的 GlobalBackground。本组件只渲染画廊内容，
+ * 不再自己渲染场景图或暗层。镜头此时已经稳定停在白框2（由
+ * use-global-camera.ts 统一驱动），本组件只负责内容的渐显。
  */
-
-const CW = 1280;
-const CH = 2692;
-
-// 两个白框
-const BOX1 = { x: 239, y: 1064, w: 865, h: 606 };
-const BOX2 = { x: 435, y: 1920, w: 701, h: 468 };
-
-// 缩放：让白框宽度填满视窗
-const SCALE1 = CW / BOX1.w;
-const SCALE2 = CW / BOX2.w;
-
-// 白框中心的百分比
-const CX1 = (BOX1.x + BOX1.w / 2) / CW;
-const CY1 = (BOX1.y + BOX1.h / 2) / CH;
-const CX2 = (BOX2.x + BOX2.w / 2) / CW;
-const CY2 = (BOX2.y + BOX2.h / 2) / CH;
-
-// 场景图高度基准：让BOX1 高度对应 100svh
-const SCENE_H_RATIO = CH / BOX1.h; // ≈ 4.44
-
-function easeInOut(t: number) {
-  return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-}
-
-function lerp(a: number, b: number, t: number) {
-  return a + (b - a) * t;
-}
 
 type Work = {
   id: string;
@@ -65,7 +35,7 @@ const GALLERY_ITEMS = WORKS.map((w) => ({
 
 export function WorkSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  const progress = useScrollProgress(sectionRef);
+  const reveal = useEntryReveal(sectionRef);
 
   const [viewing, setViewing] = useState<Work | null>(null);
   const close = useCallback(() => setViewing(null), []);
@@ -100,93 +70,44 @@ export function WorkSection() {
     }
   }, []);
 
-  // === 推进动画 ===
-  // 0~0.3:镜头从 BOX1 推进到 BOX2
-  // 0.3~0.8: 停留（画廊可交互）
-  // 0.8~1.0: 淡出
-  const pushRaw = Math.min(progress / 0.3, 1);
-  const pushP = easeInOut(pushRaw);
-
-  const cx = lerp(CX1, CX2, pushP);
-  const cy = lerp(CY1, CY2, pushP);
-  const scale = lerp(SCALE1, SCALE2, pushP);
-
-  // translate: 让(cx, cy)对齐视窗中心
-  //元素 left:50% top:50% → 左上角在视窗中心
-  // translate(-cx*100%, -cy*100%) → 画布的(cx,cy)点移到元素左上角位置=视窗中心
-  const txPct = -cx * 100;
-  const tyPct = -cy * 100;
-
-  //暗层：推进到 60%~100%渐入
-  const darkOpacity = pushRaw > 0.6 ? ((pushRaw - 0.6) / 0.4) * 0.78 : 0;
-
-  // 画廊内容：推进完后渐入
-  const contentShow = progress > 0.3 ? Math.min((progress - 0.3) / 0.08, 1) : 0;
-
-  // 退出淡出
-  const exitFade = progress > 0.8 ? 1 - (progress - 0.8) / 0.2 : 1;
+  const contentReveal = Math.min(1, Math.max(0, (reveal - 0.15) / 0.4));
 
   return (
-    <section
-      ref={sectionRef}
-      id="work"
-      className="relative z-10 h-[280svh]"
-    >
-      {/* sticky 视窗容器 */}
-      <div className="sticky top-0 h-svh w-full overflow-hidden">
-        {/* 场景图：absolute + transform 推进 */}
-        <div
-          className="absolute left-1/2 top-1/2 will-change-transform"
-          style={{
-            height: `calc(100svh * ${SCENE_H_RATIO})`,
-            aspectRatio: `${CW} / ${CH}`,
-            transform: `translate(${txPct}%, ${tyPct}%) scale(${scale})`,
-            opacity: exitFade,
-          }}
-        >
-          <img
-            src="/parallax/scene.webp"
-            alt=""
-            className="absolute inset-0 h-full w-full"
-            draggable={false}
-          />
-        </div>
-
-        {/* 暗层 */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundColor: `rgba(8, 7, 17, ${darkOpacity * exitFade})`,
-          }}
-        />
-
-        {/* 画廊内容 */}
-        <div
-          className="absolute inset-0 flex flex-col items-center justify-center text-white pointer-events-none"
-          style={{ opacity: contentShow * exitFade }}
-        >
-          <div className="mx-auto w-full max-w-6xl px-6">
-            <div className="mb-8">
-              <p className="mb-2 text-sm tracking-[0.3em] text-white/45 uppercase">
-                Selected Work
-              </p>
-              <h2 className="text-4xl font-semibold md:text-5xl">作品</h2>
-            </div>
-          </div>
-
-          {/* 画廊需要能交互 */}
-          <div className="w-screen pointer-events-auto">
-            <CircularGallery
-              items={GALLERY_ITEMS}
-              bend={3}
-              onItemClick={handleItemClick}
-            />
-          </div>
-          <p className="mt-4 text-center text-xs tracking-[0.25em] text-white/35">
-            拖拽或滚动浏览 · 点击作品查看详情
+    <section ref={sectionRef} id="work" className="relative z-10 min-h-svh py-24 text-white">
+      <div
+        className="mx-auto w-full max-w-6xl px-6"
+        style={{
+          opacity: contentReveal,
+          transform: `translateY(${(1 - contentReveal) * 20}px)`,
+        }}
+      >
+        <div className="mb-8">
+          <p className="mb-2 text-sm tracking-[0.3em] text-white/45 uppercase">
+            Selected Work
           </p>
+          <h2 className="text-4xl font-semibold md:text-5xl">作品</h2>
         </div>
       </div>
+
+      <div
+        className="w-screen"
+        style={{
+          opacity: contentReveal,
+          transform: `translateY(${(1 - contentReveal) * 20}px)`,
+        }}
+      >
+        <CircularGallery
+          items={GALLERY_ITEMS}
+          bend={3}
+          onItemClick={handleItemClick}
+        />
+      </div>
+      <p
+        className="mt-4 text-center text-xs tracking-[0.25em] text-white/35"
+        style={{ opacity: contentReveal }}
+      >
+        拖拽或滚动浏览 · 点击作品查看详情
+      </p>
 
       {/* PDF弹窗 */}
       {viewing && (

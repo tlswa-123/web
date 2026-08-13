@@ -5,10 +5,13 @@ import { useEntryReveal } from "../hooks/use-entry-reveal";
 /**
  * 简历页 —— 卡片堆叠
  *
- * 背景：section 自身设 background（固定不动），暗层覆盖
- * 内容：正常文档流，卡片各自 sticky
- * 头部内容（标题+头像）用 useEntryReveal 做淡入+上浮，紧接着 hero 的
- * 变暗时刻开始渐显，避免"下滑好一段才突然冒出来"的生硬感
+ * 【重要】背景已迁移到全局唯一的 GlobalBackground。本组件只渲染内容
+ * （标题/头像/卡片），不再自己渲染场景图或暗层。
+ *
+ * 卡片堆叠区末尾放一个不可见的标记元素 `#resume-cards-end`，
+ * use-global-camera.ts 会读取它的位置，作为"镜头开始从白框1推进到白框2"
+ * 的起点——卡片翻完的同一屏内，背景（唯一的那个背景）就开始自然推进，
+ * 不会有任何独立的空白区块。
  */
 
 const TITLE_BAR = 100;
@@ -62,28 +65,12 @@ export function ResumeSection() {
   const outerRing = progress * 360;
   const innerRing = progress * -360;
 
-  // 头部内容淡入 + 上浮：从 reveal=0.15 开始到 0.55 完全显现
-  // （对应hero暗层从0.9~1.0渐入的那段时间窗口，让内容跟着暗层同步浮现）
   const headerReveal = Math.min(1, Math.max(0, (reveal - 0.15) / 0.4));
 
   return (
-    <section
-      ref={sectionRef}
-      id="resume"
-      className="relative z-10 text-white"
-      style={{
-        backgroundImage: "url(/parallax/resume-bg.png)",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundAttachment: "fixed",
-      }}
-    >
-      {/* 暗层：覆盖整个 section */}
-      <div className="pointer-events-none absolute inset-0 z-[1] bg-[#12111f]/75" />
-
-      {/* 区块标题：随入场进度渐显+微上浮，紧跟 hero 变暗的节奏浮现 */}
+    <section ref={sectionRef} id="resume" className="relative z-10 text-white">
       <div
-        className="relative z-10 mx-auto max-w-6xl px-6 pt-24 pb-6"
+        className="mx-auto max-w-6xl px-6 pt-24 pb-6"
         style={{
           opacity: headerReveal,
           transform: `translateY(${(1 - headerReveal) * 24}px)`,
@@ -100,8 +87,7 @@ export function ResumeSection() {
         </p>
       </div>
 
-      {/* 左右分栏 */}
-      <div className="relative z-10 mx-auto grid max-w-6xl grid-cols-1 gap-8 px-6 md:grid-cols-[280px_1fr] md:gap-12">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-6 md:grid-cols-[280px_1fr] md:gap-12">
         {/* 左栏：头像 + 旋转环 + 基本信息（sticky） */}
         <div className="hidden md:block">
           <div
@@ -138,7 +124,7 @@ export function ResumeSection() {
         </div>
 
         {/* 右栏：卡片堆叠 */}
-        <div className="relative pb-[30svh]">
+        <div className="relative">
           <div className="mb-10 flex items-center gap-4 md:hidden">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#1b1a2e] border border-white/15">
               <span className="text-xs text-white/35">头像</span>
@@ -159,8 +145,6 @@ export function ResumeSection() {
                 zIndex: index + 1,
                 marginBottom:
                   index === RESUME_ITEMS.length - 1 ? 0 : "5svh",
-                // 第一张卡片是首屏就可见的，跟随入场进度渐显；后面几张
-                // 靠sticky堆叠自然进场，不需要额外处理
                 opacity: index === 0 ? headerReveal : 1,
                 transform:
                   index === 0
@@ -198,6 +182,16 @@ export function ResumeSection() {
               </div>
             </article>
           ))}
+
+          {/* 推进起点标记：不可见，仅供 use-global-camera 读取位置。
+              卡片堆叠结束后立即开始推进，卡片全部翻完 sticky 解钉的同一屏
+              内，背景就自然开始移动，不会有独立的"空白过渡区" */}
+          <div id="resume-cards-end" aria-hidden />
+
+          {/* 推进缓冲：给背景推进动画留出的滚动距离，不含任何可见内容。
+              高度与 use-global-camera.ts 里 PUSH_DISTANCE_VH 保持一致语义
+              （这里用固定 120svh，略大于推进实际所需的 1.2屏，留一点余量） */}
+          <div className="h-[120svh]" aria-hidden />
         </div>
       </div>
     </section>
