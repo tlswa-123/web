@@ -36,6 +36,7 @@ export function GlobalBackground() {
         scale={cam.scale}
         sunDropPct={cam.sunDropPct}
         mouseParallax={cam.parallaxStrength > 0}
+        marginScale={cam.marginScale}
       />
       <div
         className="pointer-events-none absolute inset-0"

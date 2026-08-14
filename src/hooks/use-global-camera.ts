@@ -33,7 +33,8 @@ import {
  * 不依赖简历卡片高度的百分比换算，因此不受响应式换行/断点影响。
  */
 
-const PUSH_DISTANCE_VH = 1.2; // 白框1→白框2 推进所占的屏数
+const PUSH_DISTANCE_VH = 1.3; // 白框1→白框2 推进所占的屏数
+const HOLD_DISTANCE_VH = 1.0; // 推进完成后镜头在白框2停留的屏数，避免仓促挤入作品内容
 const FADE_DISTANCE_VH = 0.8; // 作品区结束后背景淡出所占的屏数
 const DARK_MAX = 0.75;
 
@@ -110,20 +111,26 @@ export function useGlobalCamera() {
       darkOpacity: 0,
       sceneOpacity: 1,
       parallaxStrength: 1,
+      marginScale: 1,
     };
   }
 
   const heroActiveEnd = bounds.heroTop + bounds.heroHeight - vh;
   const pushStart = bounds.pushMarkerTop;
-  // 推进必须在进入 work 区域之前完成（work 现在是普通文档流高度，没有
-  // sticky 释放点概念，用 workTop 本身作为推进上限）
-  const pushEnd = Math.min(pushStart + PUSH_DISTANCE_VH * vh, bounds.workTop);
+  // 推进本身占 PUSH_DISTANCE_VH 屏，推进完成后再留 HOLD_DISTANCE_VH 屏
+  // 让镜头在白框2稳稳停留一下，才进入作品内容区——避免"推进完立刻挤进
+  // 作品页"的仓促感。两段总长度受 workTop 上限约束（不能超出简历区）。
+  const pushRawEnd = pushStart + PUSH_DISTANCE_VH * vh;
+  const holdEnd = pushRawEnd + HOLD_DISTANCE_VH * vh;
+  const pushEnd = Math.min(pushRawEnd, bounds.workTop);
+  const lockEnd = Math.min(holdEnd, bounds.workTop);
 
   let cx: number;
   let cy: number;
   let scale: number;
   let darkOpacity: number;
   let parallaxStrength: number;
+  let marginScale: number;
   let sunDropPct = 80;
 
   if (scrollTop <= heroActiveEnd) {
@@ -137,6 +144,10 @@ export function useGlobalCamera() {
     scale = lerp(INIT_SCALE, BOX1_SCALE, zoomP);
     darkOpacity = clamp01((p - 0.9) / 0.1) * DARK_MAX;
     parallaxStrength = 1;
+    // marginScale 随推进同步从 1 降到 0：推进到白框1完成时，防露边余量
+    // 缩放已经完全撤销，之后简历/推进/作品所有锁定阶段都不再有这个
+    // 会导致白框位置偏移的额外缩放源
+    marginScale = 1 - zoomP;
     sunDropPct = p * 80;
   } else if (scrollTop <= pushStart) {
     // 简历锁定阶段：白框1，纹丝不动
@@ -145,6 +156,7 @@ export function useGlobalCamera() {
     scale = BOX1_SCALE;
     darkOpacity = DARK_MAX;
     parallaxStrength = 0;
+    marginScale = 0;
   } else if (scrollTop <= pushEnd) {
     // 推进阶段：白框1 -> 白框2（发生在简历区尾部的缓冲滚动空间内）
     const p = clamp01((scrollTop - pushStart) / Math.max(1, pushEnd - pushStart));
@@ -154,6 +166,15 @@ export function useGlobalCamera() {
     scale = lerp(BOX1_SCALE, BOX2_SCALE, ep);
     darkOpacity = DARK_MAX;
     parallaxStrength = 0;
+    marginScale = 0;
+  } else if (scrollTop <= lockEnd) {
+    // 停留阶段：镜头已到白框2，稳定停留，给用户一点喘息空间再进入作品内容
+    cx = BOX2_CENTER.cx;
+    cy = BOX2_CENTER.cy;
+    scale = BOX2_SCALE;
+    darkOpacity = DARK_MAX;
+    parallaxStrength = 0;
+    marginScale = 0;
   } else {
     // 作品锁定阶段：白框2，纹丝不动
     cx = BOX2_CENTER.cx;
@@ -161,6 +182,7 @@ export function useGlobalCamera() {
     scale = BOX2_SCALE;
     darkOpacity = DARK_MAX;
     parallaxStrength = 0;
+    marginScale = 0;
   }
 
   const { txPct, tyPct } = cameraCSS(cx, cy, scale);
@@ -177,5 +199,5 @@ export function useGlobalCamera() {
     sceneOpacity = 1 - clamp01((scrollTop - fadeStart) / Math.max(1, fadeEnd - fadeStart));
   }
 
-  return { txPct, tyPct, scale, sunDropPct, darkOpacity, sceneOpacity, parallaxStrength };
+  return { txPct, tyPct, scale, sunDropPct, darkOpacity, sceneOpacity, parallaxStrength, marginScale };
 }
