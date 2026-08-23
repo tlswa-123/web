@@ -13,6 +13,7 @@ const pct = (v: number, base: number) => `${(v / base) * 100}%`;
 const LAYERS = [
   { key: "sky", src: "/parallax/sky.webp", x: 0, y: -221, w: 1280, h: 1208, op: 1, z: 1, depth: 1.5, scale: 1.06 },
   { key: "mtn", src: "/parallax/mtn.webp", x: -41, y: 312, w: 1362, h: 810, op: 0.7, z: 3, depth: 3.5, scale: 1.12 },
+  { key: "trees", src: "/parallax/trees.webp", x: -36, y: 208, w: 1477, h: 2626, op: 1, z: 4, depth: 5, scale: 1.14 },
   { key: "grass", src: "/parallax/grass.webp", x: -132, y: 1200, w: 1739, h: 3091, op: 1, z: 5, depth: 5.5, scale: 1.14 },
 ] as const;
 
@@ -20,8 +21,8 @@ const SUN = { x: 34, y: 327, w: 435, h: 270 };
 const SUN_DEPTH = 2.5;
 const SUN_SCALE = 1.1;
 
-const TREES_DEPTH = 5;
-const TREES_SCALE = 1.14;
+// trees 现在也走 LAYERS 统一定位（坐标来自SVG中的实际位置）
+// 不再使用 inset-0 h-full w-full，避免在 CH=3105 画布上拉伸 2692 高的图片
 
 type Props = {
   /** 舞台高度（决定整体缩放基准），一般用 `calc(100svh * CH / X)` */
@@ -124,17 +125,7 @@ export const SceneStage = forwardRef<HTMLDivElement, Props>(function SceneStage(
         }}
       />
 
-      {/* trees */}
-      <img
-        src="/parallax/trees.webp"
-        alt=""
-        draggable={false}
-        className="pointer-events-none absolute inset-0 h-full w-full select-none will-change-transform"
-        style={{
-          zIndex: 4,
-          transform: `scale(${effScale(TREES_SCALE)}) translate3d(calc(${mx} * ${TREES_DEPTH} * 1%), 0, 0)`,
-        }}
-      />
+      {/* trees 现在走 LAYERS 统一坐标定位 */}
 
       {/* 白框高亮（可选） */}
       {frameBox && (
