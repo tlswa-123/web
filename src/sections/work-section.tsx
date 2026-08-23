@@ -109,6 +109,10 @@ export function WorkSection() {
         拖拽或滚动浏览 · 点击作品查看详情
       </p>
 
+      {/* 推进缓冲区 BOX3→BOX4 的标记和空间 */}
+      <div id="work-end" aria-hidden />
+      <div className="h-[230svh]" aria-hidden />
+
       {/* PDF弹窗 */}
       {viewing && (
         <div

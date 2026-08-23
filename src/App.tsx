@@ -7,7 +7,6 @@ import { ResumeSection } from "./sections/resume-section";
 import { ExperienceSection } from "./sections/experience-section";
 import { WorkSection } from "./sections/work-section";
 import {
-  AboutSection,
   ContactSection,
 } from "./sections/placeholder-sections";
 
@@ -23,7 +22,6 @@ export default function App() {
           <ResumeSection />
           <ExperienceSection />
           <WorkSection />
-          <AboutSection />
           <ContactSection />
         </main>
       </ScrollProvider>

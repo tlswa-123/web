@@ -29,7 +29,7 @@ export function ContactSection() {
   return (
     <section
       id="contact"
-      className="relative z-10 flex min-h-[85svh] flex-col items-center justify-center bg-[#0a0912] px-6 py-24 text-center text-white"
+      className="relative z-10 flex min-h-svh flex-col items-center justify-center px-6 py-24 text-center text-white"
     >
       <p className="mb-2 text-sm tracking-[0.3em] text-white/50 uppercase">
         Contact

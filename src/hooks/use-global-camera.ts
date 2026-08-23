@@ -4,9 +4,11 @@ import {
   BOX1_CENTER,
   BOX2_CENTER,
   BOX3_CENTER,
+  BOX4_CENTER,
   BOX1_SCALE,
   BOX2_SCALE,
   BOX3_SCALE,
+  BOX4_SCALE,
   INIT_CENTER,
   INIT_SCALE,
   cameraCSS,
@@ -18,20 +20,23 @@ import {
 /**
  * 全局镜头 hook —— 整站唯一背景层的驱动逻辑
  *
- * 阶段（按绝对 scrollTop 划分）：
+ * 阶段（按绝对 scrollTop 划分，共 8 阶段）：
  * 1. 首页阶段：INIT 镜头 → 白框1（沿用 hero 原有推进节奏）
  * 2. 简历锁定阶段：镜头锁定白框1，翻阅卡片期间纹丝不动
  * 3. 推进阶段A：白框1 → 白框2（简历卡片区末尾的缓冲空间内）
  * 4. 实习经历锁定阶段：镜头锁定白框2，翻4屏实习内容
  * 5. 推进阶段B：白框2 → 白框3（实习经历区末尾的缓冲空间内）
- * 6. 作品锁定阶段：镜头锁定白框3
+ * 6. 作品锁定阶段：镜头锁定白框3，浏览作品画廊
+ * 7. 推进阶段C：白框3 → 白框4（作品区末尾的缓冲空间内）
+ * 8. 联系页锁定阶段：镜头锁定白框4
  */
 
 const PUSH_A_DISTANCE_VH = 1.3; // 白框1→白框2 推进占的屏数
 const HOLD_A_DISTANCE_VH = 0.6; // 推进A完成后停留
 const PUSH_B_DISTANCE_VH = 1.3; // 白框2→白框3 推进占的屏数
 const HOLD_B_DISTANCE_VH = 0.8; // 推进B完成后停留
-const FADE_DISTANCE_VH = 0.8; // 作品区结束后背景淡出
+const PUSH_C_DISTANCE_VH = 1.3; // 白框3→白框4 推进占的屏数
+const HOLD_C_DISTANCE_VH = 0.6; // 推进C完成后停留
 const DARK_MAX = 0.75;
 
 type Bounds = {
@@ -41,7 +46,8 @@ type Bounds = {
   expTop: number; // #experience 的位置
   pushBMarkerTop: number; // #experience-end 的位置
   workTop: number;
-  workHeight: number;
+  pushCMarkerTop: number; // #work-end 的位置
+  contactTop: number;
 };
 
 export function useGlobalCamera() {
@@ -65,15 +71,18 @@ export function useGlobalCamera() {
       const exp = document.getElementById("experience");
       const markerB = document.getElementById("experience-end");
       const work = document.getElementById("work");
+      const markerC = document.getElementById("work-end");
+      const contact = document.getElementById("contact");
       if (!hero || !markerA || !work) return;
       boundsRef.current = {
         heroTop: absoluteTop(hero),
         heroHeight: hero.offsetHeight,
         pushAMarkerTop: absoluteTop(markerA),
-        expTop: exp ? absoluteTop(exp) : absoluteTop(markerA) + PUSH_A_DISTANCE_VH * window.innerHeight + HOLD_A_DISTANCE_VH * window.innerHeight,
+        expTop: exp ? absoluteTop(exp) : absoluteTop(markerA) + (PUSH_A_DISTANCE_VH + HOLD_A_DISTANCE_VH) * window.innerHeight,
         pushBMarkerTop: markerB ? absoluteTop(markerB) : absoluteTop(work) - (PUSH_B_DISTANCE_VH + HOLD_B_DISTANCE_VH) * window.innerHeight,
         workTop: absoluteTop(work),
-        workHeight: work.offsetHeight,
+        pushCMarkerTop: markerC ? absoluteTop(markerC) : (contact ? absoluteTop(contact) - (PUSH_C_DISTANCE_VH + HOLD_C_DISTANCE_VH) * window.innerHeight : absoluteTop(work) + work.offsetHeight),
+        contactTop: contact ? absoluteTop(contact) : absoluteTop(work) + work.offsetHeight,
       };
       force((n) => n + 1);
     };
@@ -122,6 +131,11 @@ export function useGlobalCamera() {
   const pushBRawEnd = pushBStart + PUSH_B_DISTANCE_VH * vh;
   const holdBEnd = pushBRawEnd + HOLD_B_DISTANCE_VH * vh;
 
+  // 推进C: BOX3→BOX4 (作品→联系)
+  const pushCStart = bounds.pushCMarkerTop;
+  const pushCRawEnd = pushCStart + PUSH_C_DISTANCE_VH * vh;
+  const holdCEnd = pushCRawEnd + HOLD_C_DISTANCE_VH * vh;
+
   let cx: number;
   let cy: number;
   let scale: number;
@@ -162,7 +176,7 @@ export function useGlobalCamera() {
     parallaxStrength = 0;
     marginScale = 0;
   } else if (scrollTop <= holdAEnd) {
-    // 阶段3.5：推进A完成后停留（BOX2锁定开始前的缓冲）
+    // 阶段3.5：推进A完成后停留
     cx = BOX2_CENTER.cx;
     cy = BOX2_CENTER.cy;
     scale = BOX2_SCALE;
@@ -195,7 +209,7 @@ export function useGlobalCamera() {
     darkOpacity = DARK_MAX;
     parallaxStrength = 0;
     marginScale = 0;
-  } else {
+  } else if (scrollTop <= pushCStart) {
     // 阶段6：作品锁定 (BOX3)
     cx = BOX3_CENTER.cx;
     cy = BOX3_CENTER.cy;
@@ -203,18 +217,38 @@ export function useGlobalCamera() {
     darkOpacity = DARK_MAX;
     parallaxStrength = 0;
     marginScale = 0;
+  } else if (scrollTop <= pushCRawEnd) {
+    // 阶段7：推进C (BOX3→BOX4)
+    const p = clamp01((scrollTop - pushCStart) / Math.max(1, pushCRawEnd - pushCStart));
+    const ep = easeInOut(p);
+    cx = lerp(BOX3_CENTER.cx, BOX4_CENTER.cx, ep);
+    cy = lerp(BOX3_CENTER.cy, BOX4_CENTER.cy, ep);
+    scale = lerp(BOX3_SCALE, BOX4_SCALE, ep);
+    darkOpacity = DARK_MAX;
+    parallaxStrength = 0;
+    marginScale = 0;
+  } else if (scrollTop <= holdCEnd) {
+    // 阶段7.5：推进C完成后停留
+    cx = BOX4_CENTER.cx;
+    cy = BOX4_CENTER.cy;
+    scale = BOX4_SCALE;
+    darkOpacity = DARK_MAX;
+    parallaxStrength = 0;
+    marginScale = 0;
+  } else {
+    // 阶段8：联系页锁定 (BOX4)
+    cx = BOX4_CENTER.cx;
+    cy = BOX4_CENTER.cy;
+    scale = BOX4_SCALE;
+    darkOpacity = DARK_MAX;
+    parallaxStrength = 0;
+    marginScale = 0;
   }
 
   const { txPct, tyPct } = cameraCSS(cx, cy, scale);
 
-  // 淡出阶段：work区域结束后
-  const workBottom = bounds.workTop + bounds.workHeight;
-  const fadeStart = workBottom;
-  const fadeEnd = workBottom + FADE_DISTANCE_VH * vh;
-  let sceneOpacity = 1;
-  if (scrollTop > fadeStart) {
-    sceneOpacity = 1 - clamp01((scrollTop - fadeStart) / Math.max(1, fadeEnd - fadeStart));
-  }
+  // 背景始终可见，不再淡出（整站都有背景锁定区）
+  const sceneOpacity = 1;
 
   return { txPct, tyPct, scale, sunDropPct, darkOpacity, sceneOpacity, parallaxStrength, marginScale };
 }

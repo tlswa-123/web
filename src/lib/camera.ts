@@ -7,7 +7,7 @@
  */
 
 export const CW = 1280;
-export const CH = 2692;
+export const CH = 3105;
 
 /** 首页初始只展示的画布高度（决定初始镜头缩放） */
 export const VIEW_H = 832;
@@ -18,6 +18,8 @@ export const BOX1 = { x: 208, y: 991, w: 865, h: 483 };
 export const BOX2 = { x: 408, y: 1536, w: 701, h: 468 };
 /** 白框 3：作品页镜头目标区域 */
 export const BOX3 = { x: 426, y: 2066, w: 701, h: 468 };
+/** 白框 4：联系页镜头目标区域（新增底部图层） */
+export const BOX4 = { x: 238, y: 2693, w: 813, h: 380 };
 
 export function boxCenterPct(box: { x: number; y: number; w: number; h: number }) {
   return {
@@ -55,9 +57,11 @@ export function cameraCSS(cx: number, cy: number, scale: number) {
 export const BOX1_CENTER = boxCenterPct(BOX1);
 export const BOX2_CENTER = boxCenterPct(BOX2);
 export const BOX3_CENTER = boxCenterPct(BOX3);
+export const BOX4_CENTER = boxCenterPct(BOX4);
 export const BOX1_SCALE = boxScale(BOX1);
 export const BOX2_SCALE = boxScale(BOX2);
 export const BOX3_SCALE = boxScale(BOX3);
+export const BOX4_SCALE = boxScale(BOX4);
 
 /** 首页初始镜头（未推进时）的中心与缩放 */
 export const INIT_CENTER = { cx: 0.5, cy: VIEW_H / 2 / CH };
