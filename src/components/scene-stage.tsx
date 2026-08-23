@@ -13,6 +13,7 @@ const pct = (v: number, base: number) => `${(v / base) * 100}%`;
 const LAYERS = [
   { key: "sky", src: "/parallax/sky.webp", x: 0, y: -221, w: 1280, h: 1208, op: 1, z: 1, depth: 1.5, scale: 1.06 },
   { key: "mtn", src: "/parallax/mtn.webp", x: -41, y: 312, w: 1362, h: 810, op: 0.7, z: 3, depth: 3.5, scale: 1.12 },
+  { key: "grass", src: "/parallax/grass.webp", x: -132, y: 1200, w: 1739, h: 3091, op: 1, z: 5, depth: 5.5, scale: 1.14 },
 ] as const;
 
 const SUN = { x: 34, y: 327, w: 435, h: 270 };
