@@ -188,13 +188,10 @@ export function ResumeSection() {
               内，背景就自然开始移动，不会有独立的"空白过渡区" */}
           <div id="resume-cards-end" aria-hidden />
 
-          {/* 推进缓冲：给背景推进动画+推进后停留留出的滚动距离，不含任何
-              可见内容。高度需 >= use-global-camera.ts 里
-              (PUSH_DISTANCE_VH + HOLD_DISTANCE_VH) 屏，即 1.3+1.0=2.3屏，
-              这里用 250svh 留一点余量，确保推进和停留都有充足空间，
-              不会被work区顶到而被截断（之前用120svh导致推进和进入作品区
-              几乎同时发生，显得仓促） */}
-          <div className="h-[250svh]" aria-hidden />
+          {/* 推进缓冲：给背景推进A动画(BOX1→BOX2)留出的滚动距离。
+              use-global-camera.ts 里 PUSH_A_DISTANCE_VH(1.3) + HOLD_A_DISTANCE_VH(0.6) = 1.9屏，
+              这里用 200svh 留余量 */}
+          <div className="h-[200svh]" aria-hidden />
         </div>
       </div>
     </section>
