@@ -63,10 +63,26 @@ export function clamp01(v: number) {
 /**
  * 给定镜头中心百分比 (cx, cy) 和缩放 scale，
  * 返回可以直接用在 `translate(tx%, ty%) scale(s)` 的 CSS transform 参数。
- * 前提：舞台元素本身是 `absolute left-1/2 top-1/2`。
+ * 前提：舞台元素本身是 `absolute left-1/2 top-1/2`，
+ *       且 transform-origin 为默认值 (50% 50%)。
+ *
+ * CSS `transform: translate(A%, B%) scale(s)` 实际执行顺序（右到左）：
+ *   先 scale(s) 以 transform-origin=center 为中心缩放，
+ *   再 translate(A%*W, B%*H) 平移。
+ *
+ * 推导：要让画布上 (cx, cy) 比例处的点 P 显示在视口中心：
+ *   screen(P) = origin + s*(P - origin) + (tx_px, ty_px)
+ *   其中 origin = 元素中心 = (W/2, H/2) 本地坐标
+ *   要求 screen(P) = (0, 0)（相对于元素初始位置 = 视口中心）
+ *
+ *   0 = W/2 + s*(cx*W - W/2) + tx_pct/100*W
+ *   → tx_pct = 50*(s-1) - 100*s*cx
+ *   同理 ty_pct = 50*(s-1) - 100*s*cy
  */
 export function cameraCSS(cx: number, cy: number, scale: number) {
-  return { txPct: -cx * 100, tyPct: -cy * 100, scale };
+  const txPct = 50 * (scale - 1) - 100 * scale * cx;
+  const tyPct = 50 * (scale - 1) - 100 * scale * cy;
+  return { txPct, tyPct, scale };
 }
 
 // 预计算好的常用值（中心点不依赖视口，可以静态计算）
