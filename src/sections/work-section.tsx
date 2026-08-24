@@ -73,41 +73,47 @@ export function WorkSection() {
   const contentReveal = Math.min(1, Math.max(0, (reveal - 0.15) / 0.4));
 
   return (
-    <section ref={sectionRef} id="work" className="relative z-10 min-h-svh py-24 text-white">
-      <div
-        className="mx-auto w-full max-w-6xl px-6"
-        style={{
-          opacity: contentReveal,
-          transform: `translateY(${(1 - contentReveal) * 20}px)`,
-        }}
-      >
-        <div className="mb-8">
-          <p className="mb-2 text-sm tracking-[0.3em] text-white/45 uppercase">
-            Selected Work
-          </p>
-          <h2 className="text-4xl font-semibold md:text-5xl">作品</h2>
+    <section ref={sectionRef} id="work" className="relative z-10 text-white">
+      {/* 内容区域 sticky 固定一屏 */}
+      <div className="sticky top-0 flex h-svh flex-col items-center justify-center overflow-hidden">
+        <div
+          className="mx-auto w-full max-w-6xl px-6"
+          style={{
+            opacity: contentReveal,
+            transform: `translateY(${(1 - contentReveal) * 20}px)`,
+          }}
+        >
+          <div className="mb-8">
+            <p className="mb-2 text-sm tracking-[0.3em] text-white/45 uppercase">
+              Selected Work
+            </p>
+            <h2 className="text-4xl font-semibold md:text-5xl">作品</h2>
+          </div>
         </div>
+
+        <div
+          className="w-screen"
+          style={{
+            opacity: contentReveal,
+            transform: `translateY(${(1 - contentReveal) * 20}px)`,
+          }}
+        >
+          <CircularGallery
+            items={GALLERY_ITEMS}
+            bend={3}
+            onItemClick={handleItemClick}
+          />
+        </div>
+        <p
+          className="mt-4 text-center text-xs tracking-[0.25em] text-white/35"
+          style={{ opacity: contentReveal }}
+        >
+          拖拽或滚动浏览 · 点击作品查看详情
+        </p>
       </div>
 
-      <div
-        className="w-screen"
-        style={{
-          opacity: contentReveal,
-          transform: `translateY(${(1 - contentReveal) * 20}px)`,
-        }}
-      >
-        <CircularGallery
-          items={GALLERY_ITEMS}
-          bend={3}
-          onItemClick={handleItemClick}
-        />
-      </div>
-      <p
-        className="mt-4 text-center text-xs tracking-[0.25em] text-white/35"
-        style={{ opacity: contentReveal }}
-      >
-        拖拽或滚动浏览 · 点击作品查看详情
-      </p>
+      {/* 滚动高度保持不变，确保镜头阶段划分正常 */}
+      <div className="h-svh" aria-hidden />
 
       {/* 推进缓冲区 BOX3→BOX4 的标记和空间 */}
       <div id="work-end" aria-hidden />

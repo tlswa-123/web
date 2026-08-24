@@ -93,9 +93,22 @@ export const BOX4_CENTER = boxCenterPct(BOX4);
 
 // BOX_SCALE 现在需要视口尺寸，不能静态预计算——用 boxScale(BOX, vw, vh) 在运行时算
 
-/** 首页初始镜头（未推进时）的中心与缩放 */
+/** 首页初始镜头（未推进时）的中心 */
 export const INIT_CENTER = { cx: 0.5, cy: VIEW_H / 2 / CH };
-export const INIT_SCALE = 1;
+
+/**
+ * 首页初始缩放（动态，依赖视口宽高比）。
+ * 保证设计稿中 1280×832 的区域以 contain 模式完全可见：
+ * - 宽屏(16:9)下，高度约束胜出→ scale < 1 → 看到的画布高度覆盖完整 832
+ * - 窄屏/正方形下，宽度约束胜出→ scale = 1 → 宽度恰好填满
+ */
+export function initScale(vw = 1440, vh = 900) {
+  const visibleH = Math.min(VIEW_H, (vh * CW) / vw);
+  // contain: 确保整个 CW×VIEW_H 区域可见
+  // 宽度方向 scale = CW/CW = 1 (始终满足)
+  // 高度方向 scale = visibleH/VIEW_H (宽屏时<1，表示需要缩小)
+  return Math.min(1, visibleH / VIEW_H);
+}
 
 /** 太阳在 hero 结束（progress=1）时的下落百分比，供 resume/work 静态渲染太阳位置对齐 */
 export const SUN_DROP_AT_REST = 80;

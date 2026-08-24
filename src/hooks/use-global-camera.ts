@@ -10,7 +10,7 @@ import {
   BOX3_CENTER,
   BOX4_CENTER,
   INIT_CENTER,
-  INIT_SCALE,
+  initScale,
   cameraCSS,
   boxScale,
   lerp,
@@ -63,7 +63,8 @@ export function useGlobalCamera() {
   const boundsRef = useRef<Bounds | null>(null);
   const [, force] = useState(0);
 
-  // 运行时计算各 BOX 的 cover-mode scale（依赖视口宽高比）
+  // 运行时计算各 BOX 的 contain-mode scale（依赖视口宽高比）
+  const INIT_SCALE = initScale(vw, vh);
   const BOX1_SCALE = boxScale(BOX1, vw, vh);
   const BOX2_SCALE = boxScale(BOX2, vw, vh);
   const BOX3_SCALE = boxScale(BOX3, vw, vh);
