@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { CircularGallery } from "../components/circular-gallery";
+import { HangingSkillCards } from "../components/hanging-skill-cards";
 import { useEntryReveal } from "../hooks/use-entry-reveal";
 
 /**
@@ -75,41 +76,46 @@ export function WorkSection() {
   return (
     <section ref={sectionRef} id="work" className="relative z-10 text-white">
       {/* 内容区域 sticky 固定一屏 */}
-      <div className="sticky top-0 flex h-svh flex-col items-center justify-center overflow-hidden">
+      <div className="sticky top-0 flex h-svh overflow-hidden">
+        {/* 左侧 + 中间：画廊 */}
         <div
-          className="mx-auto w-full max-w-6xl px-6"
+          className="flex flex-1 flex-col items-center justify-center"
           style={{
             opacity: contentReveal,
             transform: `translateY(${(1 - contentReveal) * 20}px)`,
           }}
         >
-          <div className="mb-8">
-            <p className="mb-2 text-sm tracking-[0.3em] text-white/45 uppercase">
-              Selected Work
-            </p>
-            <h2 className="text-4xl font-semibold md:text-5xl">作品</h2>
+          <div className="mx-auto w-full max-w-4xl px-6">
+            <div className="mb-6">
+              <p className="mb-2 text-sm tracking-[0.3em] text-white/45 uppercase">
+                Selected Work
+              </p>
+              <h2 className="text-4xl font-semibold md:text-5xl">作品</h2>
+            </div>
           </div>
+
+          <div className="w-full max-w-[70vw]">
+            <CircularGallery
+              items={GALLERY_ITEMS}
+              bend={3}
+              onItemClick={handleItemClick}
+            />
+          </div>
+          <p className="mt-4 text-center text-xs tracking-[0.25em] text-white/35">
+            拖拽或滚动浏览 · 点击作品查看详情
+          </p>
         </div>
 
+        {/* 右侧：悬挂技能卡片 */}
         <div
-          className="w-screen"
+          className="hidden w-64 shrink-0 pr-6 lg:block"
           style={{
             opacity: contentReveal,
-            transform: `translateY(${(1 - contentReveal) * 20}px)`,
+            transform: `translateY(${(1 - contentReveal) * 30}px)`,
           }}
         >
-          <CircularGallery
-            items={GALLERY_ITEMS}
-            bend={3}
-            onItemClick={handleItemClick}
-          />
+          <HangingSkillCards />
         </div>
-        <p
-          className="mt-4 text-center text-xs tracking-[0.25em] text-white/35"
-          style={{ opacity: contentReveal }}
-        >
-          拖拽或滚动浏览 · 点击作品查看详情
-        </p>
       </div>
 
       {/* 滚动高度保持不变，确保镜头阶段划分正常 */}
