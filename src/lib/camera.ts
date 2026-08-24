@@ -28,8 +28,24 @@ export function boxCenterPct(box: { x: number; y: number; w: number; h: number }
   };
 }
 
-export function boxScale(box: { w: number }) {
-  return CW / box.w;
+/**
+ * 计算白框的缩放比例（contain 模式）。
+ *
+ * 保证白框区域**完全可见**在视口中——无论视口宽高比如何，
+ * 白框内容都不会被裁切，类似 background-size: contain 的语义。
+ * 视口中可能会看到白框之外的少量画布内容（作为背景的"呼吸空间"）。
+ *
+ * @param box 白框尺寸
+ * @param vw 视口宽度（px）
+ * @param vh 视口高度（px）
+ */
+export function boxScale(box: { w: number; h: number }, vw = 1440, vh = 900) {
+  // 在 scale=1 时，可见画布区域的宽高（画布坐标系单位）：
+  // visibleW = CW（因为 STAGE_HEIGHT_CSS 保证宽度>=视口）
+  // visibleH = min(VIEW_H, vh * CW / vw)
+  const visibleH = Math.min(VIEW_H, (vh * CW) / vw);
+  // contain: 白框必须完全在可见区域内，取较小的缩放比
+  return Math.min(CW / box.w, visibleH / box.h);
 }
 
 export function lerp(a: number, b: number, t: number) {
@@ -53,15 +69,13 @@ export function cameraCSS(cx: number, cy: number, scale: number) {
   return { txPct: -cx * 100, tyPct: -cy * 100, scale };
 }
 
-// 预计算好的常用值
+// 预计算好的常用值（中心点不依赖视口，可以静态计算）
 export const BOX1_CENTER = boxCenterPct(BOX1);
 export const BOX2_CENTER = boxCenterPct(BOX2);
 export const BOX3_CENTER = boxCenterPct(BOX3);
 export const BOX4_CENTER = boxCenterPct(BOX4);
-export const BOX1_SCALE = boxScale(BOX1);
-export const BOX2_SCALE = boxScale(BOX2);
-export const BOX3_SCALE = boxScale(BOX3);
-export const BOX4_SCALE = boxScale(BOX4);
+
+// BOX_SCALE 现在需要视口尺寸，不能静态预计算——用 boxScale(BOX, vw, vh) 在运行时算
 
 /** 首页初始镜头（未推进时）的中心与缩放 */
 export const INIT_CENTER = { cx: 0.5, cy: VIEW_H / 2 / CH };

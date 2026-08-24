@@ -1,17 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { useScroll } from "../lib/scroll-context";
 import {
+  BOX1,
+  BOX2,
+  BOX3,
+  BOX4,
   BOX1_CENTER,
   BOX2_CENTER,
   BOX3_CENTER,
   BOX4_CENTER,
-  BOX1_SCALE,
-  BOX2_SCALE,
-  BOX3_SCALE,
-  BOX4_SCALE,
   INIT_CENTER,
   INIT_SCALE,
   cameraCSS,
+  boxScale,
   lerp,
   easeInOut,
   clamp01,
@@ -56,8 +57,17 @@ export function useGlobalCamera() {
   const [vh, setVh] = useState(() =>
     typeof window !== "undefined" ? window.innerHeight : 900
   );
+  const [vw, setVw] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth : 1440
+  );
   const boundsRef = useRef<Bounds | null>(null);
   const [, force] = useState(0);
+
+  // 运行时计算各 BOX 的 cover-mode scale（依赖视口宽高比）
+  const BOX1_SCALE = boxScale(BOX1, vw, vh);
+  const BOX2_SCALE = boxScale(BOX2, vw, vh);
+  const BOX3_SCALE = boxScale(BOX3, vw, vh);
+  const BOX4_SCALE = boxScale(BOX4, vw, vh);
 
   useEffect(() => {
     const absoluteTop = (el: HTMLElement) => {
@@ -89,6 +99,7 @@ export function useGlobalCamera() {
     measure();
     const onResize = () => {
       setVh(window.innerHeight);
+      setVw(window.innerWidth);
       measure();
     };
     window.addEventListener("resize", onResize);
