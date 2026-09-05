@@ -1,0 +1,1079 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>创业项目与技能 · 金玺</title>
+  <style>
+    :root {
+      --bg: #0a0912;
+      --surface: #151321;
+      --surface-soft: rgba(29, 25, 43, 0.68);
+      --line: rgba(255, 255, 255, 0.11);
+      --line-soft: rgba(255, 255, 255, 0.065);
+      --text: #fffaf7;
+      --muted: rgba(255, 250, 247, 0.58);
+      --faint: rgba(255, 250, 247, 0.34);
+      --peach: #ffb074;
+      --rose: #d98291;
+      --violet: #88789c;
+      --paper: #e7dedb;
+      --paper-deep: #cdbfc1;
+      --paper-ink: #342836;
+      --radius: 24px;
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { margin: 0; min-height: 100%; }
+
+    body {
+      min-width: 320px;
+      color: var(--text);
+      background:
+        radial-gradient(85% 72% at 82% 7%, rgba(224, 125, 137, 0.20), transparent 56%),
+        radial-gradient(60% 62% at 12% 98%, rgba(103, 86, 137, 0.24), transparent 62%),
+        linear-gradient(145deg, #191426 0%, var(--bg) 48%, #11101c 100%);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.22;
+      background-image:
+        linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.014) 1px, transparent 1px);
+      background-size: 48px 48px;
+      -webkit-mask-image: linear-gradient(to bottom, #000, transparent 75%);
+      mask-image: linear-gradient(to bottom, #000, transparent 75%);
+    }
+
+    button { font: inherit; }
+
+    .page-shell {
+      position: relative;
+      width: min(1540px, 100%);
+      min-height: 100svh;
+      margin: 0 auto;
+      padding: clamp(24px, 3.5vw, 54px);
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: clamp(26px, 3.8vh, 42px);
+    }
+
+    .page-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .identity { display: grid; gap: 7px; }
+
+    .eyebrow,
+    .panel-index,
+    .category-label {
+      margin: 0;
+      color: var(--faint);
+      font-size: 10px;
+      font-weight: 650;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+    }
+
+    .identity h1 {
+      margin: 0;
+      font-size: clamp(24px, 2.5vw, 38px);
+      font-weight: 550;
+      letter-spacing: -0.035em;
+    }
+
+    .page-note {
+      margin: 0 0 3px;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+    }
+
+    .columns {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1.12fr) minmax(360px, 0.88fr);
+      gap: clamp(22px, 2.8vw, 42px);
+    }
+
+    .panel {
+      position: relative;
+      min-width: 0;
+      min-height: 700px;
+      border: 1px solid var(--line-soft);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(145deg, rgba(255,255,255,.045), transparent 36%),
+        var(--surface-soft);
+      box-shadow:
+        0 34px 80px rgba(3, 2, 10, 0.32),
+        inset 0 1px rgba(255, 255, 255, 0.055);
+      -webkit-backdrop-filter: blur(18px) saturate(1.08);
+      backdrop-filter: blur(18px) saturate(1.08);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      position: relative;
+      z-index: 5;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 22px;
+      padding: clamp(24px, 2.4vw, 36px) clamp(24px, 2.6vw, 40px) 0;
+    }
+
+    .panel-title { display: grid; gap: 8px; }
+
+    .panel-title h2 {
+      margin: 0;
+      font-size: clamp(24px, 2vw, 34px);
+      font-weight: 540;
+      letter-spacing: -0.03em;
+    }
+
+    .panel-copy {
+      max-width: 34ch;
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    /* ----------------------------- project book */
+    .project-panel {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .project-panel::after {
+      content: "";
+      position: absolute;
+      left: 8%; right: 8%; bottom: 4%;
+      height: 42%;
+      pointer-events: none;
+      background: radial-gradient(ellipse at 50% 65%, rgba(255, 163, 111, 0.12), transparent 70%);
+      filter: blur(22px);
+    }
+
+    .book-area {
+      position: relative;
+      z-index: 2;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 16px;
+      padding: 16px clamp(12px, 2vw, 30px) 28px;
+    }
+
+    .book-row {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr) 34px;
+      align-items: center;
+      gap: clamp(5px, 1vw, 14px);
+    }
+
+    .book-arrow {
+      width: 34px;
+      height: 58px;
+      border: 0;
+      border-radius: 999px;
+      color: var(--muted);
+      background: transparent;
+      cursor: pointer;
+      transition: color 180ms ease, background-color 180ms ease, transform 180ms ease;
+    }
+
+    .book-arrow:hover,
+    .book-arrow:focus-visible {
+      color: var(--text);
+      background: rgba(255,255,255,.06);
+    }
+
+    .book-arrow:active { transform: scale(0.94); }
+    .book-arrow:focus-visible { outline: 1px solid rgba(255,255,255,.65); outline-offset: 3px; }
+
+    .book-stage {
+      position: relative;
+      width: 100%;
+      min-width: 0;
+      perspective: 1750px;
+      perspective-origin: 50% 47%;
+      touch-action: pan-y;
+      outline: none;
+    }
+
+    .book-stage:focus-visible::after {
+      content: "";
+      position: absolute;
+      inset: 4%;
+      border: 1px solid rgba(255,255,255,.42);
+      border-radius: 14px;
+      pointer-events: none;
+    }
+
+    .book-cast {
+      position: absolute;
+      left: 8%; right: 8%; top: 62%; bottom: -3%;
+      pointer-events: none;
+      background: radial-gradient(ellipse at 50% 34%, rgba(5, 3, 10, .62), transparent 73%);
+      filter: blur(20px);
+      opacity: calc(1 - var(--shade, 0) * .45);
+    }
+
+    .book {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1.52;
+      transform-style: preserve-3d;
+      filter: drop-shadow(0 24px 28px rgba(4, 2, 10, .27));
+    }
+
+    .full-page { position: absolute; inset: 0; }
+    .full-page img { display: block; width: 100%; height: 100%; }
+
+    .half-page {
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 50%;
+      overflow: hidden;
+    }
+
+    .half-page.left { left: 0; border-radius: 16px 0 0 16px; }
+    .half-page.right { left: 50%; border-radius: 0 16px 16px 0; }
+    .half-page img { display: block; width: 200%; max-width: none; height: 100%; }
+    .half-page img.right { margin-left: -100%; }
+
+    .gutter-shade {
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 48%;
+      pointer-events: none;
+      opacity: calc(var(--shade, 0) * .68);
+    }
+
+    .gutter-shade.left { right: 0; background: linear-gradient(270deg, rgba(46,29,48,.34), transparent 82%); }
+    .gutter-shade.right { left: 0; background: linear-gradient(90deg, rgba(46,29,48,.28), transparent 82%); }
+
+    .curl {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      width: calc(var(--book-width, 0px) * var(--span));
+      transform-style: preserve-3d;
+      z-index: 6;
+    }
+
+    .curl.next {
+      left: 50%;
+      transform-origin: left center;
+      transform: rotateY(calc(-1 * var(--turn-total, 0deg)));
+    }
+
+    .curl.prev {
+      right: 50%;
+      transform-origin: right center;
+      transform: rotateY(var(--turn-total, 0deg));
+    }
+
+    .curl-strip {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      width: calc(var(--book-width, 0px) * var(--span) / var(--strip-count));
+      transform-style: preserve-3d;
+    }
+
+    .curl.next .curl-strip { transform-origin: left center; }
+    .curl.prev .curl-strip { transform-origin: right center; }
+    .curl.next > .curl-strip { left: 0; }
+    .curl.prev > .curl-strip { right: 0; left: auto; }
+    .curl.next .curl-strip .curl-strip { left: 100%; transform: rotateY(var(--turn-step, 0deg)); }
+    .curl.prev .curl-strip .curl-strip { right: 100%; transform: rotateY(calc(-1 * var(--turn-step, 0deg))); }
+
+    .curl-face {
+      position: absolute;
+      inset: 0 -1.1px 0 0;
+      border-radius: 1px;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      background-repeat: no-repeat;
+      background-size: var(--book-width, 0px) 100%;
+    }
+
+    .curl-face.back { transform: rotateY(180deg); }
+    .curl-light,
+    .curl-shadow { position: absolute; inset: 0; pointer-events: none; }
+
+    .curl.next .curl-face.front .curl-shadow,
+    .curl.prev .curl-face.back .curl-shadow {
+      background: linear-gradient(90deg, rgba(52,31,52,var(--shade-a,0)), rgba(52,31,52,var(--shade-b,0)));
+    }
+
+    .curl.next .curl-face.back .curl-shadow,
+    .curl.prev .curl-face.front .curl-shadow {
+      background: linear-gradient(90deg, rgba(52,31,52,var(--shade-b,0)), rgba(52,31,52,var(--shade-a,0)));
+    }
+
+    .curl-light {
+      background: #fff9f2;
+      opacity: calc(var(--shade, 0) * var(--lit, 1) * var(--lit, 1) * .18);
+    }
+
+    .turn-zone {
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 50%;
+      z-index: 60;
+      border: 0;
+      background: transparent;
+      cursor: grab;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .turn-zone:active { cursor: grabbing; }
+    .turn-zone.prev { left: 0; }
+    .turn-zone.next { right: 0; }
+
+    .book-meta {
+      display: grid;
+      justify-items: center;
+      gap: 10px;
+    }
+
+    .book-caption {
+      min-height: 20px;
+      margin: 0;
+      color: rgba(255,255,255,.76);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .19em;
+      text-transform: uppercase;
+    }
+
+    .book-controls { display: flex; align-items: center; gap: 8px; }
+
+    .page-dot {
+      width: 6px;
+      height: 6px;
+      padding: 0;
+      border: 0;
+      border-radius: 99px;
+      background: rgba(255,255,255,.18);
+      cursor: pointer;
+      transition: width 260ms var(--ease), background-color 260ms ease;
+    }
+
+    .page-dot[aria-current="true"] { width: 22px; background: var(--peach); }
+    .page-dot:focus-visible { outline: 1px solid white; outline-offset: 3px; }
+
+    .book-hint {
+      margin: 0;
+      color: var(--faint);
+      font-size: 10px;
+      letter-spacing: .13em;
+      text-align: center;
+      text-transform: uppercase;
+      transition: opacity 300ms ease;
+    }
+
+    .book-hint.hidden { opacity: 0; }
+
+    /* ----------------------------- skill light field */
+    .skills-panel {
+      --pointer-x: 50%;
+      --pointer-y: 50%;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      isolation: isolate;
+    }
+
+    .skills-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      opacity: var(--panel-light, 0);
+      background: radial-gradient(circle 270px at var(--pointer-x) var(--pointer-y), rgba(255,185,137,.11), transparent 70%);
+      transition: opacity 300ms ease;
+    }
+
+    .skills-field {
+      min-height: 0;
+      padding: clamp(24px, 3vh, 38px) clamp(24px, 2.6vw, 40px) clamp(28px, 3vw, 42px);
+      display: grid;
+      align-content: center;
+      gap: clamp(20px, 2.8vh, 30px);
+    }
+
+    .skill-category { display: grid; gap: 10px; }
+
+    .category-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .category-head::after {
+      content: "";
+      height: 1px;
+      flex: 1;
+      background: linear-gradient(90deg, var(--line), transparent);
+    }
+
+    .skill-cloud { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .skill-slot {
+      position: relative;
+      perspective: 650px;
+    }
+
+    .skill-pill {
+      --light-x: 50%;
+      --light-y: 50%;
+      --glow: 0;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      min-height: 36px;
+      padding: 0 13px;
+      border: 1px solid rgba(var(--tone), .20);
+      border-radius: 11px;
+      color: rgba(255,255,255,.70);
+      background:
+        linear-gradient(145deg, rgba(var(--tone), .13), rgba(var(--tone), .055)),
+        rgba(255,255,255,.02);
+      box-shadow: inset 0 1px rgba(255,255,255,.045);
+      font-size: 12px;
+      font-weight: 520;
+      letter-spacing: .015em;
+      white-space: nowrap;
+      transform-style: preserve-3d;
+      will-change: transform;
+    }
+
+    .skill-pill::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      pointer-events: none;
+      opacity: var(--glow);
+      background:
+        radial-gradient(circle 46px at var(--light-x) var(--light-y), rgba(255,255,255,.38), transparent 75%),
+        radial-gradient(circle 82px at var(--light-x) var(--light-y), rgba(var(--tone), .30), transparent 78%);
+      mix-blend-mode: screen;
+    }
+
+    .skill-pill::after {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      padding: 1px;
+      border-radius: inherit;
+      pointer-events: none;
+      opacity: calc(var(--glow) * .88);
+      background: conic-gradient(from var(--rim-angle, 0rad), transparent, rgba(255,255,255,.88), transparent 72deg 260deg, rgba(var(--tone), .8), transparent);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+    }
+
+    .skill-slot:focus-within .skill-pill {
+      color: white;
+      border-color: rgba(255,255,255,.42);
+    }
+
+    .skill-pill:focus-visible { outline: 1px solid rgba(255,255,255,.72); outline-offset: 3px; }
+
+    .skill-category[data-tone="product"] { --tone: 255, 176, 116; }
+    .skill-category[data-tone="design"] { --tone: 166, 137, 199; }
+    .skill-category[data-tone="frontend"] { --tone: 117, 158, 190; }
+    .skill-category[data-tone="ai"] { --tone: 236, 154, 99; }
+    .skill-category[data-tone="tools"] { --tone: 206, 116, 139; }
+
+    .future-note {
+      position: absolute;
+      right: 26px;
+      bottom: 20px;
+      margin: 0;
+      color: rgba(255,255,255,.24);
+      font-size: 9px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 980px) {
+      .columns { grid-template-columns: 1fr; }
+      .panel { min-height: 640px; }
+      .skills-panel { min-height: auto; }
+      .skills-field { align-content: start; }
+      .future-note { position: static; padding: 0 28px 24px; }
+    }
+
+    @media (max-width: 620px) {
+      .page-shell { padding: 20px 14px 28px; }
+      .page-head { align-items: flex-start; }
+      .page-note { display: none; }
+      .panel { min-height: 570px; border-radius: 20px; }
+      .panel-copy { display: none; }
+      .book-row { grid-template-columns: 26px minmax(0,1fr) 26px; gap: 2px; }
+      .book-arrow { width: 26px; padding: 0; }
+      .book-area { padding-inline: 4px; }
+      .skill-pill { min-height: 34px; padding-inline: 11px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; }
+      .skill-pill { will-change: auto; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page-shell">
+    <header class="page-head">
+      <div class="identity">
+        <p class="eyebrow">Jin Xi · Portfolio</p>
+        <h1>创业项目与技能</h1>
+      </div>
+      <p class="page-note">独立页面原型 · Venture & Capability</p>
+    </header>
+
+    <div class="columns">
+      <section class="panel project-panel" aria-labelledby="venture-title">
+        <header class="panel-head">
+          <div class="panel-title">
+            <p class="panel-index">01 · Venture</p>
+            <h2 id="venture-title">创业项目</h2>
+          </div>
+          <p class="panel-copy">拖动纸页或使用箭头翻阅。这里仅保留空白纸页，收到你的项目图片后再逐页放入。</p>
+        </header>
+
+        <div class="book-area">
+          <div class="book-row">
+            <button class="book-arrow" id="prevPage" aria-label="上一页">←</button>
+            <div class="book-stage" id="bookStage" tabindex="0" role="region" aria-label="创业项目翻页册，使用左右方向键翻页">
+              <div class="book-cast" aria-hidden="true"></div>
+              <div class="book" id="book"></div>
+            </div>
+            <button class="book-arrow" id="nextPage" aria-label="下一页">→</button>
+          </div>
+          <div class="book-meta">
+            <p class="book-caption" id="bookCaption" aria-live="polite"></p>
+            <div class="book-controls" id="bookControls" aria-label="选择项目页"></div>
+            <p class="book-hint" id="bookHint">拖动纸张翻页 · 也可使用方向键</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel skills-panel" id="skillsPanel" aria-labelledby="skills-title">
+        <header class="panel-head">
+          <div class="panel-title">
+            <p class="panel-index">02 · Capability</p>
+            <h2 id="skills-title">技能</h2>
+          </div>
+          <p class="panel-copy">来自现有简历。每项保持轻微浮动，鼠标经过时会被局部光照唤醒。</p>
+        </header>
+
+        <div class="skills-field" id="skillsField"></div>
+        <p class="future-note">Pointer light · subtle motion · resume sourced</p>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const FINE_POINTER = matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+      /* -------------------------------- project pages
+         These blank SVG textures are replaced by the user's project images later.
+         The page-turn renderer already consumes image URLs, so that swap does not
+         change the interaction code. */
+      const PROJECT_PAGES = Array.from({ length: 4 }, (_, index) => ({
+        caption: `空白项目页 · ${String(index + 1).padStart(2, "0")}`,
+        leftKicker: "",
+        leftTitle: [],
+        leftBody: [],
+        rightKicker: "",
+        rightTitle: [],
+        rightBody: []
+      }));
+
+      function escapeXml(value) {
+        return String(value).replace(/[&<>"']/g, char => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&apos;"
+        })[char]);
+      }
+
+      function textLines(lines, x, y, size, gap, className) {
+        return `<text x="${x}" y="${y}" class="${className}" font-size="${size}">` +
+          lines.map((line, index) => `<tspan x="${x}" dy="${index ? gap : 0}">${escapeXml(line)}</tspan>`).join("") +
+          "</text>";
+      }
+
+      function makeSpread(page, index) {
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="920" viewBox="0 0 1400 920">
+          <defs>
+            <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#f0e9e4"/><stop offset=".55" stop-color="#e3d8d7"/><stop offset="1" stop-color="#cfc0c3"/>
+            </linearGradient>
+            <linearGradient id="left" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#fff" stop-opacity=".13"/><stop offset=".84" stop-color="#432e43" stop-opacity=".02"/><stop offset="1" stop-color="#342536" stop-opacity=".16"/>
+            </linearGradient>
+            <linearGradient id="right" x1="1" y1="0" x2="0" y2="0">
+              <stop offset="0" stop-color="#fff" stop-opacity=".11"/><stop offset=".84" stop-color="#432e43" stop-opacity=".02"/><stop offset="1" stop-color="#342536" stop-opacity=".14"/>
+            </linearGradient>
+            <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".78" numOctaves="3" seed="${index + 3}"/><feColorMatrix values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 .055 0"/></filter>
+          </defs>
+          <rect x="16" y="18" width="1368" height="884" rx="30" fill="url(#paper)"/>
+          <rect x="16" y="18" width="684" height="884" rx="30" fill="url(#left)"/>
+          <rect x="700" y="18" width="684" height="884" rx="30" fill="url(#right)"/>
+          <rect x="16" y="18" width="1368" height="884" rx="30" filter="url(#grain)" opacity=".9"/>
+          <path d="M700 18V902" stroke="#5c4558" stroke-opacity=".20"/>
+          <path d="M697 18V902" stroke="#fff" stroke-opacity=".22"/>
+          <style>
+            text{font-family:Inter,'PingFang SC','Microsoft YaHei',sans-serif;fill:#342836}
+            .k{font-weight:700;letter-spacing:7px;fill:#8c6570}
+            .t{font-weight:600;letter-spacing:-2px}
+            .b{font-weight:450;letter-spacing:1px;fill:#665664}
+            .n{font-weight:700;fill:#aa6f63}
+          </style>
+          <text x="82" y="102" class="k" font-size="18">${escapeXml(page.leftKicker)}</text>
+          ${textLines(page.leftTitle, 82, 244, 58, 70, "t")}
+          ${textLines(page.leftBody, 82, 700, 24, 42, "b")}
+          <text x="642" y="830" text-anchor="end" class="n" font-size="18">${String(index * 2 + 1).padStart(2, "0")}</text>
+          <text x="762" y="102" class="k" font-size="18">${escapeXml(page.rightKicker)}</text>
+          ${textLines(page.rightTitle, 762, 244, 52, 66, "t")}
+          ${textLines(page.rightBody, 762, 700, 24, 42, "b")}
+          <text x="1318" y="830" text-anchor="end" class="n" font-size="18">${String(index * 2 + 2).padStart(2, "0")}</text>
+          <path d="M82 650H315" stroke="#a56d66" stroke-width="2" stroke-opacity=".65"/>
+          <path d="M762 650H995" stroke="#a56d66" stroke-width="2" stroke-opacity=".65"/>
+        </svg>`;
+        return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+      }
+
+      const PAGES = PROJECT_PAGES.map((page, index) => ({ ...page, url: makeSpread(page, index) }));
+      const PAGE_COUNT = PAGES.length;
+      const STRIPS = 18;
+      const SPAN = 0.5;
+      const PEAK_CURL = 0.60;
+      const book = document.getElementById("book");
+      const stage = document.getElementById("bookStage");
+      const caption = document.getElementById("bookCaption");
+      const hint = document.getElementById("bookHint");
+      const controls = document.getElementById("bookControls");
+      let pageIndex = 0;
+      let turn = null;
+      let stripNodes = [];
+      let spring = null;
+      let drag = null;
+      let frameId = 0;
+      let lastFrame = 0;
+
+      function node(tag, className) {
+        const element = document.createElement(tag);
+        if (className) element.className = className;
+        return element;
+      }
+
+      function image(index, side) {
+        const img = new Image();
+        img.src = PAGES[index].url;
+        img.alt = "";
+        img.draggable = false;
+        if (side) img.className = side;
+        return img;
+      }
+
+      function half(position, index) {
+        const wrapper = node("div", `half-page ${position}`);
+        wrapper.appendChild(image(index, position));
+        wrapper.appendChild(node("div", `gutter-shade ${position}`));
+        return wrapper;
+      }
+
+      function buildCurl(direction, from, to) {
+        stripNodes = [];
+        const curl = node("div", `curl ${direction}`);
+        curl.style.setProperty("--strip-count", STRIPS);
+        curl.style.setProperty("--span", SPAN);
+        let host = curl;
+        for (let index = 0; index < STRIPS; index += 1) {
+          const strip = node("div", "curl-strip");
+          const gutter = "calc(var(--book-width) * 0.5)";
+          const stripWidth = `calc(var(--book-width) * ${SPAN} / ${STRIPS})`;
+          const fromPosition = `calc(-1 * (${gutter} + ${index} * ${stripWidth}))`;
+          const toPosition = `calc(${index + 1} * ${stripWidth} - ${gutter})`;
+          const front = node("div", "curl-face front");
+          const back = node("div", "curl-face back");
+          front.style.backgroundImage = `url("${PAGES[from].url}")`;
+          back.style.backgroundImage = `url("${PAGES[to].url}")`;
+          front.style.backgroundPositionX = direction === "next" ? fromPosition : toPosition;
+          back.style.backgroundPositionX = direction === "next" ? toPosition : fromPosition;
+          front.append(node("div", "curl-shadow"), node("div", "curl-light"));
+          back.append(node("div", "curl-shadow"), node("div", "curl-light"));
+          strip.append(front, back);
+          host.appendChild(strip);
+          host = strip;
+          stripNodes.push(strip);
+        }
+        return curl;
+      }
+
+      function applyTurn(progress) {
+        const theta = Math.PI * progress;
+        const curl = PEAK_CURL * Math.sin(Math.PI * progress);
+        const total = theta + curl;
+        const step = (2 * curl) / STRIPS;
+        const degrees = 180 / Math.PI;
+        stage.style.setProperty("--turn-total", `${(total * degrees).toFixed(2)}deg`);
+        stage.style.setProperty("--turn-step", `${(step * degrees).toFixed(3)}deg`);
+        stage.style.setProperty("--shade", Math.sin(Math.PI * progress).toFixed(3));
+        stripNodes.forEach((strip, index) => {
+          const lightA = Math.abs(Math.cos(total - index * step));
+          const lightB = Math.abs(Math.cos(total - (index + 1) * step));
+          strip.style.setProperty("--lit", lightA.toFixed(3));
+          strip.style.setProperty("--shade-a", ((1 - lightA) * .62).toFixed(3));
+          strip.style.setProperty("--shade-b", ((1 - lightB) * .62).toFixed(3));
+        });
+      }
+
+      function paint() {
+        book.textContent = "";
+        if (!turn) {
+          const full = node("div", "full-page");
+          const img = image(pageIndex);
+          img.alt = PAGES[pageIndex].caption;
+          full.appendChild(img);
+          book.appendChild(full);
+          stage.style.setProperty("--shade", "0");
+        } else {
+          const next = turn.direction === "next";
+          book.appendChild(half("left", next ? turn.from : turn.to));
+          book.appendChild(half("right", next ? turn.to : turn.from));
+          book.appendChild(buildCurl(turn.direction, turn.from, turn.to));
+          applyTurn(turn.progress);
+        }
+
+        const prevZone = node("button", "turn-zone prev");
+        const nextZone = node("button", "turn-zone next");
+        prevZone.type = nextZone.type = "button";
+        prevZone.setAttribute("aria-label", "拖动到上一页");
+        nextZone.setAttribute("aria-label", "拖动到下一页");
+        book.append(prevZone, nextZone);
+        layoutBook();
+        caption.textContent = PAGES[turn ? turn.to : pageIndex].caption;
+        updateDots();
+      }
+
+      function layoutBook() {
+        stage.style.setProperty("--book-width", `${book.clientWidth}px`);
+      }
+
+      function requestTick() {
+        if (!frameId) {
+          lastFrame = performance.now();
+          frameId = requestAnimationFrame(tick);
+        }
+      }
+
+      function tick(now) {
+        frameId = 0;
+        const dt = Math.min(0.032, (now - lastFrame) / 1000 || 0.016);
+        lastFrame = now;
+        if (spring && turn) {
+          const displacement = turn.progress - spring.target;
+          spring.velocity += (-spring.stiffness * displacement - spring.damping * spring.velocity) * dt;
+          turn.progress += spring.velocity * dt;
+          if (Math.abs(turn.progress - spring.target) < .002 && Math.abs(spring.velocity) < .02) {
+            turn.progress = spring.target;
+            applyTurn(turn.progress);
+            const done = spring.done;
+            spring = null;
+            done?.();
+          } else {
+            applyTurn(turn.progress);
+          }
+        }
+        if (spring) requestTick();
+      }
+
+      function animateTo(target, done, stiffness = 150, damping = 22) {
+        spring = { target, done, stiffness, damping, velocity: 0 };
+        requestTick();
+      }
+
+      function startTurn(direction, progress = 0) {
+        spring = null;
+        if (turn) {
+          pageIndex = turn.to;
+          turn = null;
+        }
+        const from = pageIndex;
+        const to = direction === "next"
+          ? (from + 1) % PAGE_COUNT
+          : (from - 1 + PAGE_COUNT) % PAGE_COUNT;
+        turn = { direction, from, to, progress };
+        paint();
+      }
+
+      function commit() {
+        if (!turn) return;
+        hint.classList.add("hidden");
+        if (REDUCED) {
+          pageIndex = turn.to;
+          turn = null;
+          paint();
+          return;
+        }
+        animateTo(1, () => {
+          pageIndex = turn.to;
+          turn = null;
+          paint();
+        }, 170, 26);
+      }
+
+      function cancelTurn() {
+        if (!turn) return;
+        animateTo(0, () => {
+          turn = null;
+          paint();
+        }, 150, 24);
+      }
+
+      function step(direction) {
+        if (turn) {
+          pageIndex = turn.to;
+          turn = null;
+        }
+        startTurn(direction, 0);
+        commit();
+      }
+
+      function goTo(index) {
+        if (index === pageIndex) return;
+        if (turn) {
+          pageIndex = turn.to;
+          turn = null;
+        }
+        const forward = (index - pageIndex + PAGE_COUNT) % PAGE_COUNT;
+        const backward = (pageIndex - index + PAGE_COUNT) % PAGE_COUNT;
+        if (Math.min(forward, backward) === 1) step(forward === 1 ? "next" : "prev");
+        else { pageIndex = index; paint(); }
+      }
+
+      function updateDots() {
+        [...controls.children].forEach((dot, index) => {
+          dot.setAttribute("aria-current", index === (turn ? turn.to : pageIndex) ? "true" : "false");
+        });
+      }
+
+      PROJECT_PAGES.forEach((page, index) => {
+        const dot = node("button", "page-dot");
+        dot.type = "button";
+        dot.setAttribute("aria-label", `打开第 ${index + 1} 页：${page.caption}`);
+        dot.addEventListener("click", () => goTo(index));
+        controls.appendChild(dot);
+      });
+
+      stage.addEventListener("pointerdown", event => {
+        if (event.button !== 0) return;
+        const zone = event.target.closest(".turn-zone");
+        if (!zone) return;
+        event.preventDefault();
+        stage.setPointerCapture(event.pointerId);
+        const rect = book.getBoundingClientRect();
+        const direction = zone.classList.contains("next") ? "next" : "prev";
+        startTurn(direction, 0);
+        drag = { direction, startX: event.clientX, width: rect.width, moved: 0, velocity: 0, previousTime: performance.now() };
+        hint.classList.add("hidden");
+      });
+
+      stage.addEventListener("pointermove", event => {
+        if (!drag || !turn) return;
+        const delta = event.clientX - drag.startX;
+        drag.moved = Math.max(drag.moved, Math.abs(delta));
+        const raw = (drag.direction === "next" ? -delta : delta) / (drag.width * .62);
+        const progress = Math.max(0, Math.min(1, raw));
+        const now = performance.now();
+        drag.velocity = (progress - turn.progress) / Math.max(.001, (now - drag.previousTime) / 1000);
+        drag.previousTime = now;
+        turn.progress = progress;
+        applyTurn(progress);
+      });
+
+      function finishDrag() {
+        if (!drag || !turn) return;
+        const gesture = drag;
+        drag = null;
+        if (gesture.moved < 6) { commit(); return; }
+        if (turn.progress > .42 || gesture.velocity > 1.1) commit();
+        else cancelTurn();
+      }
+
+      stage.addEventListener("pointerup", finishDrag);
+      stage.addEventListener("pointercancel", finishDrag);
+      stage.addEventListener("dragstart", event => event.preventDefault());
+      stage.addEventListener("selectstart", event => event.preventDefault());
+      stage.addEventListener("keydown", event => {
+        if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+        event.preventDefault();
+        step(event.key === "ArrowRight" ? "next" : "prev");
+      });
+      document.getElementById("prevPage").addEventListener("click", () => step("prev"));
+      document.getElementById("nextPage").addEventListener("click", () => step("next"));
+      addEventListener("resize", layoutBook, { passive: true });
+      paint();
+
+      /* -------------------------------- resume-sourced skills */
+      const SKILLS = [
+        {
+          label: "产品技能",
+          tone: "product",
+          items: ["需求分析", "用户调研", "功能设计", "交互流程设计", "数据驱动迭代", "跨团队协作", "产品文档撰写"]
+        },
+        {
+          label: "技术技能",
+          tone: "frontend",
+          items: ["C#", "Python", "SQL（基础）"]
+        },
+        {
+          label: "工具",
+          tone: "design",
+          items: ["Figma", "Arduino", "Axure", "PS", "AI", "AE", "PR", "Fusion 360", "Blender", "C4D", "Unity", "UE", "Rhino", "Maya"]
+        },
+        {
+          label: "AI 工具",
+          tone: "ai",
+          items: ["Codex", "WorkBuddy", "Agent", "GPT", "Claude", "Kimi", "GLM", "DeepSeek", "Seedance", "混元 3D", "Suno"]
+        }
+      ];
+
+      const skillsField = document.getElementById("skillsField");
+      const skillsPanel = document.getElementById("skillsPanel");
+      const pillStates = [];
+      let skillPointer = { x: 0, y: 0, active: false };
+      let skillFrame = 0;
+      let skillStart = performance.now();
+
+      SKILLS.forEach((category, categoryIndex) => {
+        const section = node("section", "skill-category");
+        section.dataset.tone = category.tone;
+        const head = node("div", "category-head");
+        const label = node("h3", "category-label");
+        label.textContent = category.label;
+        head.appendChild(label);
+        const cloud = node("div", "skill-cloud");
+        category.items.forEach((skill, itemIndex) => {
+          const slot = node("span", "skill-slot");
+          const pill = node("span", "skill-pill");
+          pill.textContent = skill;
+          pill.tabIndex = 0;
+          slot.appendChild(pill);
+          cloud.appendChild(slot);
+          pillStates.push({
+            slot,
+            pill,
+            phase: categoryIndex * 1.37 + itemIndex * .91,
+            speed: .48 + ((categoryIndex + itemIndex) % 4) * .065,
+            amplitude: 1.2 + ((itemIndex * 7 + categoryIndex) % 4) * .42,
+            left: 0,
+            top: 0,
+            centerX: 0,
+            centerY: 0
+          });
+        });
+        section.append(head, cloud);
+        skillsField.appendChild(section);
+      });
+
+      function measureSkills() {
+        pillStates.forEach(state => {
+          const rect = state.slot.getBoundingClientRect();
+          state.left = rect.left;
+          state.top = rect.top;
+          state.centerX = rect.left + rect.width / 2;
+          state.centerY = rect.top + rect.height / 2;
+        });
+      }
+
+      function animateSkills(now) {
+        const time = (now - skillStart) / 1000;
+        pillStates.forEach(state => {
+          const floatX = REDUCED ? 0 : Math.sin(time * state.speed + state.phase) * state.amplitude;
+          const floatY = REDUCED ? 0 : Math.cos(time * state.speed * .78 + state.phase * 1.4) * state.amplitude * .72;
+          const dx = skillPointer.x - state.centerX;
+          const dy = skillPointer.y - state.centerY;
+          const distance = skillPointer.active ? Math.hypot(dx, dy) : 9999;
+          const raw = Math.max(0, Math.min(1, 1 - distance / 165));
+          const glow = raw * raw * (3 - 2 * raw);
+          const tiltX = glow * Math.max(-5, Math.min(5, -dy / 22));
+          const tiltY = glow * Math.max(-7, Math.min(7, dx / 18));
+          const localX = skillPointer.x - state.left;
+          const localY = skillPointer.y - state.top;
+          state.pill.style.setProperty("--light-x", `${localX.toFixed(1)}px`);
+          state.pill.style.setProperty("--light-y", `${localY.toFixed(1)}px`);
+          state.pill.style.setProperty("--glow", glow.toFixed(3));
+          state.pill.style.setProperty("--rim-angle", `${Math.atan2(-dy, dx).toFixed(3)}rad`);
+          state.pill.style.color = `rgba(255,255,255,${(.70 + glow * .29).toFixed(3)})`;
+          state.pill.style.transform = `translate3d(${floatX.toFixed(2)}px,${floatY.toFixed(2)}px,0) rotateX(${tiltX.toFixed(2)}deg) rotateY(${tiltY.toFixed(2)}deg) translateZ(${(glow * 8).toFixed(2)}px)`;
+        });
+        skillFrame = requestAnimationFrame(animateSkills);
+      }
+
+      skillsPanel.addEventListener("pointermove", event => {
+        if (!FINE_POINTER || event.pointerType === "touch") return;
+        skillPointer = { x: event.clientX, y: event.clientY, active: true };
+        const rect = skillsPanel.getBoundingClientRect();
+        skillsPanel.style.setProperty("--pointer-x", `${event.clientX - rect.left}px`);
+        skillsPanel.style.setProperty("--pointer-y", `${event.clientY - rect.top}px`);
+        skillsPanel.style.setProperty("--panel-light", "1");
+      }, { passive: true });
+
+      skillsPanel.addEventListener("pointerleave", () => {
+        skillPointer.active = false;
+        skillsPanel.style.setProperty("--panel-light", "0");
+      });
+
+      addEventListener("resize", measureSkills, { passive: true });
+      document.fonts?.ready.then(measureSkills);
+      requestAnimationFrame(() => {
+        measureSkills();
+        skillFrame = requestAnimationFrame(animateSkills);
+      });
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          cancelAnimationFrame(skillFrame);
+          skillFrame = 0;
+        } else if (!skillFrame) {
+          skillStart = performance.now();
+          measureSkills();
+          skillFrame = requestAnimationFrame(animateSkills);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

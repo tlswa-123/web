@@ -26,3 +26,7 @@ npm-debug.log*
 .env
 .env.local
 .env.*.local
+
+# Local reference archives and package caches
+work/
+tmp/

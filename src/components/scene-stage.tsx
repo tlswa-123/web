@@ -11,14 +11,15 @@ import { CW, CH } from "../lib/camera";
 const pct = (v: number, base: number) => `${(v / base) * 100}%`;
 
 const LAYERS = [
-  { key: "sky", src: "/parallax/sky.webp", x: 0, y: -221, w: 1280, h: 1208, op: 1, z: 1, depth: 1.5, scale: 1.06 },
-  { key: "mtn", src: "/parallax/mtn.webp", x: -41, y: 312, w: 1362, h: 810, op: 0.7, z: 3, depth: 3.5, scale: 1.12 },
-  { key: "trees", src: "/parallax/trees.webp", x: -36, y: 208, w: 1477, h: 2626, op: 1, z: 4, depth: 5, scale: 1.14 },
-  { key: "grass", src: "/parallax/grass.webp", x: -132, y: 1200, w: 1739, h: 3091, op: 1, z: 5, depth: 5.5, scale: 1.14 },
+  { key: "sky", src: "/parallax/sky.webp", x: 0, y: -221, w: 1280, h: 1208, op: 1, z: 1, depth: 8, rotate: 0.018, scale: 1.06 },
+  { key: "mtn", src: "/parallax/mtn.webp", x: -41, y: 312, w: 1362, h: 810, op: 0.7, z: 3, depth: 20, rotate: 0.035, scale: 1.12 },
+  { key: "trees", src: "/parallax/trees.webp", x: -36, y: 208, w: 1477, h: 2626, op: 1, z: 4, depth: 36, rotate: 0.052, scale: 1.14 },
+  { key: "grass", src: "/parallax/grass.webp", x: -132, y: 1200, w: 1739, h: 3091, op: 1, z: 5, depth: 46, rotate: 0.062, scale: 1.14 },
 ] as const;
 
 const SUN = { x: 34, y: 327, w: 435, h: 270 };
-const SUN_DEPTH = 2.5;
+const SUN_DEPTH = 14;
+const SUN_ROTATE = 0.028;
 const SUN_SCALE = 1.1;
 
 // trees 现在也走 LAYERS 统一定位（坐标来自SVG中的实际位置）
@@ -74,7 +75,8 @@ export const SceneStage = forwardRef<HTMLDivElement, Props>(function SceneStage(
   },
   ref
 ) {
-  const mx = mouseParallax ? "var(--mx,0)" : "0";
+  const mx = mouseParallax ? "var(--mx, 0)" : "0";
+  const my = mouseParallax ? "var(--my, 0)" : "0";
   // 各层有效缩放 = 1 + (基础余量-1) * marginScale，marginScale=0时完全不缩放
   const effScale = (base: number) => 1 + (base - 1) * marginScale;
 
@@ -86,6 +88,8 @@ export const SceneStage = forwardRef<HTMLDivElement, Props>(function SceneStage(
         height: stageHeight,
         aspectRatio: `${CW} / ${CH}`,
         transform: `translate(${txPct}%, ${tyPct}%) scale(${scale})`,
+        perspective: "1400px",
+        transformStyle: "preserve-3d",
         opacity,
       }}
     >
@@ -104,7 +108,8 @@ export const SceneStage = forwardRef<HTMLDivElement, Props>(function SceneStage(
             height: pct(l.h, CH),
             opacity: l.op,
             zIndex: l.z,
-            transform: `scale(${effScale(l.scale)}) translate3d(calc(${mx} * ${l.depth} * 1%), 0, 0)`,
+            transform: `translate3d(calc(${mx} * ${-l.depth}px), calc(${my} * ${(-l.depth * 0.62).toFixed(2)}px), 0) rotateY(calc(${mx} * ${l.rotate}deg)) rotateX(calc(${my} * ${(-l.rotate * 0.7).toFixed(4)}deg)) scale(${effScale(l.scale)})`,
+            transformOrigin: "50% 50%",
           }}
         />
       ))}
@@ -121,7 +126,8 @@ export const SceneStage = forwardRef<HTMLDivElement, Props>(function SceneStage(
           width: pct(SUN.w, CW),
           height: pct(SUN.h, CH),
           zIndex: 2,
-          transform: `scale(${effScale(SUN_SCALE)}) translate3d(calc(${mx} * ${SUN_DEPTH} * 1%), ${sunDropPct}%, 0)`,
+          transform: `translate3d(calc(${mx} * ${-SUN_DEPTH}px), calc(${sunDropPct}% + ${my} * ${(-SUN_DEPTH * 0.62).toFixed(2)}px), 0) rotateY(calc(${mx} * ${SUN_ROTATE}deg)) rotateX(calc(${my} * ${(-SUN_ROTATE * 0.7).toFixed(4)}deg)) scale(${effScale(SUN_SCALE)})`,
+          transformOrigin: "50% 50%",
         }}
       />
 

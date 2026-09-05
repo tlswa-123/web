@@ -36,6 +36,8 @@ export class DampedScroll {
     window.removeEventListener("keydown", this.onKey);
     window.removeEventListener("scroll", this.onScroll);
     cancelAnimationFrame(this.raf);
+    this.raf = 0;
+    this.running = false;
   }
 
   subscribe(fn: ScrollListener) {
@@ -47,8 +49,17 @@ export class DampedScroll {
   }
 
   /** 平滑滚动到指定 Y（供锚点导航使用） */
-  scrollTo(y: number) {
+  scrollTo(y: number, immediate = false) {
+    this.onResize();
     this.target = this.clamp(y);
+    if (immediate) {
+      cancelAnimationFrame(this.raf);
+      this.running = false;
+      this.current = this.target;
+      window.scrollTo(0, this.current);
+      this.emit();
+      return;
+    }
     this.ensureRunning();
   }
 

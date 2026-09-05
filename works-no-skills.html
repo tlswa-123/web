@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>作品 · 金玺</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+        --ink: #fff;
+        --muted: rgb(255 255 255 / .48);
+        --faint: rgb(255 255 255 / .28);
+        --accent: #ff8a4c;
+        --bg: #12111f;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { min-height: 100%; margin: 0; background: var(--bg); }
+      body { overflow: hidden; color: var(--ink); -webkit-font-smoothing: antialiased; }
+      button, a { font: inherit; }
+      button { color: inherit; }
+      a { color: inherit; text-decoration: none; }
+
+      .work-page {
+        position: relative;
+        isolation: isolate;
+        display: flex;
+        min-height: 100svh;
+        flex-direction: column;
+        overflow: hidden;
+        padding: 104px 4vw 28px;
+      }
+
+      .work-page::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -2;
+        background:
+          linear-gradient(180deg, rgb(10 9 18 / .42), rgb(10 9 18 / .72)),
+          url("/works/work-bg.png") center / cover no-repeat;
+        filter: saturate(.82) contrast(.9);
+        transform: scale(1.04);
+      }
+
+      .work-page::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background: radial-gradient(circle at 50% 65%, transparent 0 22%, rgb(8 7 15 / .32) 78%);
+      }
+
+      .site-nav {
+        position: fixed;
+        inset: 0 0 auto;
+        z-index: 20;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        padding: 20px 4vw;
+        mix-blend-mode: difference;
+      }
+
+      .site-nav a {
+        border-radius: .6rem;
+        padding: .2rem .4rem;
+        color: rgb(255 255 255 / .9);
+        transition: color 180ms ease, background-color 180ms ease;
+      }
+
+      .site-nav .brand { padding: 0; font-size: 1.1rem; font-weight: 650; letter-spacing: .03em; }
+      .site-nav .links { display: flex; gap: 1.5rem; padding-top: .1rem; font-size: .875rem; }
+      .site-nav a:hover, .site-nav a:focus-visible { color: #fff; background: rgb(255 255 255 / .12); outline: none; }
+      .site-nav a:focus-visible { outline: 1px solid rgb(255 255 255 / .8); outline-offset: 3px; }
+
+      .work-heading {
+        width: min(1400px, 100%);
+        margin: 0 auto;
+        transition: transform 500ms cubic-bezier(.22, 1, .36, 1), opacity 500ms ease;
+      }
+
+      .eyebrow {
+        margin: 0 0 .55rem;
+        color: rgb(255 255 255 / .5);
+        font-size: .72rem;
+        letter-spacing: .3em;
+        text-transform: uppercase;
+      }
+
+      h1 { margin: 0; font-size: clamp(2.5rem, 5vw, 5rem); font-weight: 620; letter-spacing: -.055em; }
+
+      .gallery-shell {
+        display: flex;
+        min-height: 0;
+        flex: 1;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+      }
+
+      .gallery {
+        position: relative;
+        width: min(1500px, 100%);
+        height: clamp(350px, 46vw, 570px);
+        cursor: grab;
+        touch-action: pan-y;
+        perspective: 1400px;
+        perspective-origin: 50% 44%;
+        outline: none;
+      }
+
+      .gallery:active { cursor: grabbing; }
+      .gallery:focus-visible { outline: 1px solid rgb(255 255 255 / .6); outline-offset: 6px; border-radius: 16px; }
+
+      .gallery-center {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 0;
+        height: 0;
+        transform-style: preserve-3d;
+      }
+
+      .work-card {
+        position: absolute;
+        top: -120px;
+        left: -180px;
+        width: 360px;
+        height: 240px;
+        margin: 0;
+        transform-style: preserve-3d;
+        transition: opacity 180ms ease;
+        pointer-events: none;
+      }
+
+      .work-card img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        filter: drop-shadow(0 8px 24px rgb(0 0 0 / .52));
+        user-select: none;
+        -webkit-user-drag: none;
+      }
+
+      .work-card figcaption {
+        position: absolute;
+        left: 50%;
+        bottom: -30px;
+        transform: translateX(-50%);
+        color: rgb(255 255 255 / .56);
+        font-size: .7rem;
+        letter-spacing: .18em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        opacity: .8;
+      }
+
+      .work-card[data-active="true"] figcaption { color: #fff; opacity: 1; }
+
+      .gallery-note {
+        margin: 0;
+        color: var(--faint);
+        font-size: .72rem;
+        letter-spacing: .25em;
+        text-align: center;
+      }
+
+      .gallery-note span { color: rgb(255 255 255 / .52); }
+
+      @media (max-width: 720px) {
+        .work-page { padding: 92px 18px 24px; }
+        .site-nav { padding: 18px; }
+        .site-nav .links { gap: .55rem; font-size: .75rem; }
+        .gallery { height: 390px; }
+        .work-card { top: -92px; left: -140px; width: 280px; height: 184px; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="work-page">
+      <nav class="site-nav" aria-label="主导航">
+        <a class="brand" href="/" aria-label="返回首页">YourName</a>
+        <div class="links">
+          <a href="/#resume">简历</a>
+          <a href="/#work" aria-current="page">作品</a>
+          <a href="/#resume">关于</a>
+          <a href="/#contact">联系</a>
+        </div>
+      </nav>
+
+      <header class="work-heading">
+        <p class="eyebrow">Selected Work</p>
+        <h1>作品</h1>
+      </header>
+
+      <section class="gallery-shell" aria-label="作品画廊">
+        <div class="gallery" id="gallery" tabindex="0" role="region" aria-label="作品画廊，拖动或使用左右方向键浏览，点击居中作品查看 PDF">
+          <div class="gallery-center" id="galleryCenter"></div>
+        </div>
+      </section>
+
+      <p class="gallery-note">拖拽或滚动浏览 <span>·</span> 点击居中作品查看详情</p>
+    </main>
+
+    <script>
+      (() => {
+        const works = [
+          { id: "cardia", title: "ACarDiA", image: "/works/cardia.png", pdf: true },
+          { id: "lumobird", title: "Lumobird", image: "/works/lumobird.png", pdf: false },
+          { id: "memory", title: "Memory", image: "/works/memory.png", pdf: true },
+          { id: "moodoo", title: "Moodoo", image: "/works/moodoo.png", pdf: true },
+          { id: "musaic", title: "Musaic", image: "/works/musaic.png", pdf: true },
+          { id: "scribe", title: "Scribe", image: "/works/scribe.png", pdf: true },
+        ];
+        const gallery = document.getElementById("gallery");
+        const center = document.getElementById("galleryCenter");
+        const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        let offset = 0;
+        let target = 0;
+        let raf = 0;
+        let dragging = false;
+        let startX = 0;
+        let lastX = 0;
+        let moved = 0;
+        const cards = new Map();
+
+        const layout = () => {
+          const width = Math.min(360, Math.max(240, gallery.clientWidth / 4));
+          const height = width * .6667;
+          const gap = Math.max(28, width * .12);
+          const step = width + gap;
+          const total = step * works.length;
+          const edge = step * 3;
+          const bend = 3;
+          const angle = Math.min(Math.max(bend, .1), 8) * 4.8 * Math.PI / 180;
+          const radius = edge / Math.sin(angle);
+
+          cards.forEach((index, card) => {
+            let x = index * step - offset;
+            x = ((x % total) + total) % total;
+            if (x > total / 2) x -= total;
+            const clamped = Math.min(Math.abs(x), radius * .98);
+            const arc = radius - Math.sqrt(Math.max(radius * radius - clamped * clamped, 0));
+            const rotate = Math.sign(x) * Math.asin(clamped / radius) * 180 / Math.PI;
+            const distance = Math.abs(x) / (step * 1.6);
+            const z = -Math.min(distance, 2.2) * 180;
+            const blur = distance > 1.5 ? Math.min((distance - 1.5) * 2, 2.5) : 0;
+            card.style.width = width + "px";
+            card.style.height = height + "px";
+            card.style.left = -width / 2 + "px";
+            card.style.top = -height / 2 + "px";
+            card.style.transform = `translate3d(${x}px, ${arc * .55}px, ${z}px) rotateZ(${rotate}deg)`;
+            card.style.filter = blur ? `blur(${blur}px)` : "none";
+            card.style.opacity = Math.max(1 - distance * .25, 0);
+            card.style.visibility = Math.abs(x) < step * 3.5 ? "visible" : "hidden";
+            card.style.zIndex = String(Math.round(1000 - Math.abs(x)));
+            card.dataset.active = String(Math.abs(x) < step * .4);
+            card.dataset.x = String(x);
+          });
+        };
+
+        works.forEach((work) => {
+          const card = document.createElement("figure");
+          card.className = "work-card";
+          card.dataset.id = work.id;
+          card.innerHTML = `<img src="${work.image}" alt="${work.title}" draggable="false"><figcaption>${work.title}</figcaption>`;
+          center.appendChild(card);
+          cards.set(card, works.indexOf(work));
+        });
+
+        const draw = () => {
+          const diff = target - offset;
+          offset += reduced ? diff : diff * .09;
+          layout();
+          if (Math.abs(diff) > .3 && !reduced) raf = requestAnimationFrame(draw);
+          else { offset = target; layout(); raf = 0; }
+        };
+        const animate = () => { if (!raf) raf = requestAnimationFrame(draw); };
+
+        const centerCard = (direction) => {
+          target += direction * (gallery.clientWidth / 4 + 44);
+          animate();
+        };
+
+        gallery.addEventListener("wheel", (event) => {
+          event.preventDefault();
+          target += (Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY) * .8;
+          animate();
+        }, { passive: false });
+
+        gallery.addEventListener("pointerdown", (event) => {
+          if (event.button !== 0) return;
+          dragging = true; startX = lastX = event.clientX; moved = 0;
+          gallery.setPointerCapture(event.pointerId);
+        });
+        gallery.addEventListener("pointermove", (event) => {
+          if (!dragging) return;
+          const dx = event.clientX - lastX;
+          moved += Math.abs(dx); lastX = event.clientX; target -= dx * 1.4; animate();
+        });
+        gallery.addEventListener("pointerup", (event) => {
+          if (!dragging) return;
+          dragging = false;
+          if (moved < 8) {
+            let selected = null; let distance = Infinity;
+            cards.forEach((_index, card) => {
+              const x = Math.abs(Number(card.dataset.x || 0) - (event.clientX - gallery.getBoundingClientRect().left - gallery.clientWidth / 2));
+              if (x < distance) { distance = x; selected = card; }
+            });
+            if (selected && selected.dataset.active === "true") {
+              const work = works.find((item) => item.id === selected.dataset.id);
+              if (work && work.pdf) window.location.href = `/?work=${work.id}`;
+            } else if (selected) {
+              target += Number(selected.dataset.x || 0); animate();
+            }
+          }
+        });
+        gallery.addEventListener("pointercancel", () => { dragging = false; });
+        gallery.addEventListener("keydown", (event) => {
+          if (event.key === "ArrowRight") { event.preventDefault(); centerCard(1); }
+          if (event.key === "ArrowLeft") { event.preventDefault(); centerCard(-1); }
+          if (event.key === "Enter") {
+            const active = [...cards].find(([card]) => card.dataset.active === "true")?.[0];
+            const work = works.find((item) => item.id === active?.dataset.id);
+            if (work?.pdf) window.location.href = `/?work=${work.id}`;
+          }
+        });
+        window.addEventListener("resize", layout, { passive: true });
+        layout();
+      })();
+    </script>
+  </body>
+</html>

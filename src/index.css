@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@source "./**/*.{ts,tsx}";
 
 :root {
   color-scheme: dark;
@@ -26,8 +27,89 @@ body::-webkit-scrollbar {
   display: none;
 }
 
+.pdf-work-scroll {
+  scrollbar-width: none;
+}
+
+.pdf-work-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 img {
   -webkit-user-drag: none;
+}
+
+/* 导航保留原来的排布与颜色，只增加连续的距离感应和指针高光。 */
+.nav-proximity-item {
+  --spec-angle: 2.4rad;
+  --spec-bright: 0;
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border-radius: 0.6rem;
+  transform-origin: 50% 0;
+  white-space: nowrap;
+  will-change: width, height, transform;
+  transition:
+    color 180ms ease,
+    background-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.nav-proximity-item::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: 1;
+  padding: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: var(--spec-bright);
+  background: conic-gradient(
+    from var(--spec-angle) at 50% 50%,
+    rgb(255 255 255 / 0) 0deg,
+    rgb(255 255 255 / 0.08) 14deg,
+    rgb(255 255 255 / 0.95) 28deg,
+    rgb(255 255 255 / 0.16) 46deg,
+    rgb(255 255 255 / 0) 68deg,
+    rgb(255 255 255 / 0) 180deg,
+    rgb(255 255 255 / 0.08) 194deg,
+    rgb(255 255 255 / 0.95) 208deg,
+    rgb(255 255 255 / 0.16) 226deg,
+    rgb(255 255 255 / 0) 248deg,
+    rgb(255 255 255 / 0) 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+.nav-proximity-item[data-near="true"] {
+  color: rgb(255 255 255 / 1);
+  background: rgb(255 255 255 / 0.075);
+  box-shadow:
+    0 0.45rem 1rem rgb(5 4 12 / 0.22),
+    inset 0 1px rgb(255 255 255 / 0.08);
+}
+
+.nav-proximity-item:focus-visible {
+  outline: 1px solid rgb(255 255 255 / 0.75);
+  outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce), (hover: none), (pointer: coarse) {
+  .nav-proximity-item {
+    will-change: auto;
+  }
 }
 
 /* 画廊进场淡入 */
