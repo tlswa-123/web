@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import { CW, CH } from "../lib/camera";
+import { assetPath } from "../lib/asset-path";
 
 /**
  * 共享场景舞台 —— sky/sun/mtn/trees 四层，供 hero/resume/work 三处共用
@@ -11,10 +12,10 @@ import { CW, CH } from "../lib/camera";
 const pct = (v: number, base: number) => `${(v / base) * 100}%`;
 
 const LAYERS = [
-  { key: "sky", src: "/parallax/sky.webp", x: 0, y: -221, w: 1280, h: 1208, op: 1, z: 1, depth: 8, rotate: 0.018, scale: 1.06 },
-  { key: "mtn", src: "/parallax/mtn.webp", x: -41, y: 312, w: 1362, h: 810, op: 0.7, z: 3, depth: 20, rotate: 0.035, scale: 1.12 },
-  { key: "trees", src: "/parallax/trees.webp", x: -36, y: 208, w: 1477, h: 2626, op: 1, z: 4, depth: 36, rotate: 0.052, scale: 1.14 },
-  { key: "grass", src: "/parallax/grass.webp", x: -132, y: 1200, w: 1739, h: 3091, op: 1, z: 5, depth: 46, rotate: 0.062, scale: 1.14 },
+  { key: "sky", src: assetPath("parallax/sky.webp"), x: 0, y: -221, w: 1280, h: 1208, op: 1, z: 1, depth: 8, rotate: 0.018, scale: 1.06 },
+  { key: "mtn", src: assetPath("parallax/mtn.webp"), x: -41, y: 312, w: 1362, h: 810, op: 0.7, z: 3, depth: 20, rotate: 0.035, scale: 1.12 },
+  { key: "trees", src: assetPath("parallax/trees.webp"), x: -36, y: 208, w: 1477, h: 2626, op: 1, z: 4, depth: 36, rotate: 0.052, scale: 1.14 },
+  { key: "grass", src: assetPath("parallax/grass.webp"), x: -132, y: 1200, w: 1739, h: 3091, op: 1, z: 5, depth: 46, rotate: 0.062, scale: 1.14 },
 ] as const;
 
 const SUN = { x: 34, y: 327, w: 435, h: 270 };
@@ -116,7 +117,7 @@ export const SceneStage = forwardRef<HTMLDivElement, Props>(function SceneStage(
 
       {/* 太阳 */}
       <img
-        src="/parallax/sun.webp"
+        src={assetPath("parallax/sun.webp")}
         alt=""
         draggable={false}
         className="pointer-events-none absolute select-none will-change-transform"

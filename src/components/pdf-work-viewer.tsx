@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { NavBar } from "./nav-bar";
+import { assetPath } from "../lib/asset-path";
 
 const THUMB_HEIGHT = 56;
 const clamp = (value: number, min = 0, max = 1) => Math.min(max, Math.max(min, value));
@@ -214,7 +215,7 @@ export function PdfWorkViewer({ src, title, pageCount, onClose, onNavigate }: Pr
                       })}>重新加载这一页</button>
                     </div>
                   ) : (
-                    <img src={`/works/pages/${workId}/page-${number}.jpg`} alt={`${title} 第 ${number} 页`}
+                    <img src={assetPath(`works/pages/${workId}/page-${number}.jpg`)} alt={`${title} 第 ${number} 页`}
                       width={2800} height={990} loading={number === 1 ? "eager" : "lazy"} decoding="async" draggable={false}
                       className="block h-auto w-full" onLoad={syncScrollState}
                       onError={() => setFailedPages((previous) => new Set(previous).add(number))} />

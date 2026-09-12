@@ -3,6 +3,8 @@
  * 作品区已独立到 work-section.tsx。
  */
 
+import { assetPath } from "../lib/asset-path";
+
 export function AboutSection() {
   return (
     <section
@@ -78,7 +80,7 @@ export function ContactSection() {
           <div className="flex flex-col items-center gap-3">
             <div className="overflow-hidden rounded-2xl border border-white/15 bg-white p-3">
               <img
-                src="/contact/wechat-qr.png"
+                src={assetPath("contact/wechat-qr.png")}
                 alt="微信二维码"
                 className="h-40 w-40 object-contain"
                 draggable={false}

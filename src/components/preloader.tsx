@@ -1,12 +1,13 @@
 import type { ReactNode } from "react";
 import { usePreload } from "../hooks/use-preload";
+import { assetPath } from "../lib/asset-path";
 
 const ASSETS = [
-  "/parallax/sky.webp",
-  "/parallax/mtn.webp",
-  "/parallax/trees.webp",
-  "/parallax/sun.webp",
-  "/loading-birds.png",
+  assetPath("parallax/sky.webp"),
+  assetPath("parallax/mtn.webp"),
+  assetPath("parallax/trees.webp"),
+  assetPath("parallax/sun.webp"),
+  assetPath("loading-birds.png"),
 ];
 
 /**
@@ -28,7 +29,7 @@ export function Preloader({ children }: { children: ReactNode }) {
         {/* 旋转的小鸟圈 */}
         <div className="relative flex items-center justify-center">
           <img
-            src="/loading-birds.png"
+            src={assetPath("loading-birds.png")}
             alt=""
             className="h-[280px] w-[280px] animate-[spin_4s_linear_infinite] object-contain md:h-[360px] md:w-[360px]"
           />
