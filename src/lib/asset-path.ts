@@ -4,6 +4,8 @@
  * domain served from (/).
  */
 export function assetPath(asset: string) {
+  const origin = import.meta.env.VITE_ASSET_ORIGIN;
+  if (origin) return `${origin.replace(/\/$/, "")}/${asset.replace(/^\/+/, "")}`;
   const base = import.meta.env.BASE_URL || "/";
   return `${base.replace(/\/$/, "")}/${asset.replace(/^\/+/, "")}`;
 }
