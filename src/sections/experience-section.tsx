@@ -1,5 +1,8 @@
 import { useRef, useMemo } from "react";
 import { useScrollProgress } from "../hooks/use-scroll-progress";
+import { useScroll } from "../lib/scroll-context";
+import { PageTurnBook } from "../components/page-turn-book";
+import { SkillsSection } from "./skills-section";
 
 /**
  * 实习经历页 —— 4屏全屏 sticky 翻页 + 右上角时间线导航
@@ -147,7 +150,9 @@ const EXPERIENCES: ExperienceItem[] = [
 
 export function ExperienceSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  const progress = useScrollProgress(sectionRef);
+  const cardsRef = useRef<HTMLDivElement>(null);
+  const scroll = useScroll();
+  const progress = useScrollProgress(cardsRef);
 
   // 根据进度确定当前活跃的经历索引
   const activeIndex = useMemo(() => {
@@ -159,47 +164,107 @@ export function ExperienceSection() {
     return Math.min(idx, total - 1);
   }, [progress]);
 
+  const currentNavId = progress >= 0.96 ? "skills" : EXPERIENCES[activeIndex].id;
+  const navigateToExperience = (id: string) => {
+    const cards = cardsRef.current;
+    if (!cards) return;
+    if (id === "skills") {
+      const skills = document.getElementById("skills");
+      if (skills) scroll.scrollTo(skills.getBoundingClientRect().top + window.scrollY);
+      return;
+    }
+    const index = EXPERIENCES.findIndex((item) => item.id === id);
+    if (index < 0) return;
+    const cardsTop = cards.getBoundingClientRect().top + window.scrollY;
+    scroll.scrollTo(cardsTop + index * window.innerHeight);
+  };
+
+  const navigationItems = [
+    ...EXPERIENCES.map(({ id, company, period }) => ({ id, label: company, period })),
+    { id: "skills", label: "技能", period: "Capability" },
+  ];
+
   return (
     <section
       ref={sectionRef}
       id="experience"
       className="relative z-10 text-white"
     >
-      {/* 4屏 sticky 容器 */}
-      <div className="relative" style={{ height: `${EXPERIENCES.length * 100 + 50}svh` }}>
-        {/* 右上角时间线导航 — sticky 固定 */}
-        <div className="sticky top-0 z-30 pointer-events-none h-0">
-          <nav className="pointer-events-auto absolute right-6 top-8 md:right-12 md:top-12 flex flex-col gap-3">
-            {EXPERIENCES.map((exp, i) => (
-              <button
-                key={exp.id}
-                className={`text-right transition-all duration-300 ${
-                  i === activeIndex
-                    ? "opacity-100 scale-100"
-                    : "opacity-40 scale-95"
+      {/* 右上角时间线导航 — 贯穿经历与技能区，离开本 section 后自然结束 */}
+      <div className="sticky top-0 z-30 pointer-events-none h-0">
+        <nav className="pointer-events-auto absolute right-6 top-8 md:right-12 md:top-12 flex flex-col gap-3">
+          {navigationItems.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => navigateToExperience(item.id)}
+              className={`text-right transition-all duration-300 ${
+                item.id === currentNavId ? "opacity-100 scale-100" : "opacity-40 scale-95"
+              }`}
+            >
+              <div
+                className={`text-sm font-medium transition-colors ${
+                  item.id === currentNavId ? "text-white" : "text-white/50"
                 }`}
               >
-                <div
-                  className={`text-sm font-medium transition-colors ${
-                    i === activeIndex ? "text-white" : "text-white/50"
-                  }`}
-                >
-                  {exp.company}
-                </div>
-                <div className="text-xs text-white/40">{exp.period}</div>
-              </button>
-            ))}
-          </nav>
-        </div>
+                {item.label}
+              </div>
+              <div className="text-xs text-white/40">{item.period}</div>
+            </button>
+          ))}
+        </nav>
+      </div>
 
+      {/* 4屏 sticky 容器 */}
+      <div ref={cardsRef} className="relative" style={{ height: `${EXPERIENCES.length * 100 + 50}svh` }}>
         {/* 各经历全屏卡片 — sticky 堆叠 */}
         {EXPERIENCES.map((exp, index) => {
           const isActive = index === activeIndex;
           const isPast = index < activeIndex;
+          const modulesContent = (
+            <div className={`grid gap-8 ${exp.modules.length >= 3 ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
+              {exp.modules.map((mod) => (
+                <div key={mod.title}>
+                  <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[#ff8a4c]">
+                    {mod.title}
+                  </h4>
+                  <ul className="space-y-2">
+                    {mod.bullets.map((bullet, bi) => (
+                      <li
+                        key={bi}
+                        className="relative pl-4 text-sm leading-relaxed text-white/70 before:absolute before:left-0 before:top-[0.6em] before:h-1.5 before:w-1.5 before:rounded-full before:bg-white/30 md:text-base"
+                      >
+                        {bullet}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+
+              {exp.screenshotPlaceholder && exp.id !== "maipal" && (
+                <div className="mt-4 md:col-span-full">
+                  <div className="rounded-xl border border-dashed border-white/20 bg-white/5 p-8 text-center text-sm text-white/30">
+                    📷 截图占位：{exp.screenshotPlaceholder}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+          const tagsContent = (
+            <div className="mt-8 flex flex-wrap gap-2">
+              {exp.tags.map((tag) => (
+                <span key={tag} className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/55">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          );
 
           return (
             <div
               key={exp.id}
+              id={`experience-${exp.id}`}
+              data-experience-card={exp.id}
               className="sticky top-0 h-svh flex items-center justify-start overflow-hidden"
               style={{ zIndex: index + 1 }}
             >
@@ -225,59 +290,34 @@ export function ExperienceSection() {
                   )}
                 </div>
 
-                {/* 核心一句话 */}
-                <p className="text-lg md:text-xl text-white/80 max-w-3xl leading-relaxed mb-10 border-l-2 border-[#ff8a4c]/60 pl-5">
-                  {exp.headline}
-                </p>
-
-                {/* 模块内容 */}
-                <div className={`grid gap-8 ${
-                  exp.modules.length >= 3 ? "md:grid-cols-3" : "md:grid-cols-2"
-                }`}>
-                  {exp.modules.map((mod) => (
-                    <div key={mod.title}>
-                      <h4 className="text-sm font-semibold text-[#ff8a4c] uppercase tracking-wide mb-3">
-                        {mod.title}
-                      </h4>
-                      <ul className="space-y-2">
-                        {mod.bullets.map((bullet, bi) => (
-                          <li
-                            key={bi}
-                            className="text-sm md:text-base text-white/70 leading-relaxed pl-4 relative before:content-[''] before:absolute before:left-0 before:top-[0.6em] before:w-1.5 before:h-1.5 before:rounded-full before:bg-white/30"
-                          >
-                            {bullet}
-                          </li>
-                        ))}
-                      </ul>
+                {exp.id === "maipal" ? (
+                  <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(300px,380px)] lg:items-center">
+                    <div>
+                      <p className="mb-10 max-w-3xl border-l-2 border-[#ff8a4c]/60 pl-5 text-lg leading-relaxed text-white/80 md:text-xl">
+                        {exp.headline}
+                      </p>
+                      {modulesContent}
+                      {tagsContent}
                     </div>
-                  ))}
-
-                  {/* 截图占位 */}
-                  {exp.screenshotPlaceholder && (
-                    <div className="md:col-span-full mt-4">
-                      <div className="rounded-xl border border-dashed border-white/20 bg-white/5 p-8 text-center text-white/30 text-sm">
-                        📷 截图占位：{exp.screenshotPlaceholder}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* 标签 */}
-                <div className="mt-8 flex flex-wrap gap-2">
-                  {exp.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/55"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+                    <PageTurnBook />
+                  </div>
+                ) : (
+                  <>
+                    <p className="mb-10 max-w-3xl border-l-2 border-[#ff8a4c]/60 pl-5 text-lg leading-relaxed text-white/80 md:text-xl">
+                      {exp.headline}
+                    </p>
+                    {modulesContent}
+                    {tagsContent}
+                  </>
+                )}
               </div>
             </div>
           );
         })}
       </div>
+
+      {/* 更多经历之后的独立技能下滑区 */}
+      <SkillsSection />
 
       {/* 推进缓冲区 BOX2→BOX3 的标记和空间 */}
       <div id="experience-end" aria-hidden />

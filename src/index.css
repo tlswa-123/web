@@ -106,9 +106,104 @@ img {
   outline-offset: 4px;
 }
 
+/* 总导航的子页面菜单：悬停或键盘聚焦时展开，点击子项跳转到真实区块。 */
+.site-nav-menu {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+  padding-top: 0.25rem;
+  color: rgb(255 255 255 / .9);
+  font-size: .875rem;
+}
+
+.site-nav-group {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+}
+
+.site-nav-trigger {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.site-nav-dropdown {
+  position: absolute;
+  top: calc(100% + .75rem);
+  right: -.55rem;
+  z-index: 60;
+  display: grid;
+  min-width: max-content;
+  gap: .15rem;
+  padding: .45rem;
+  border: 1px solid rgb(255 255 255 / .14);
+  border-radius: .8rem;
+  background: rgb(20 18 32 / .9);
+  box-shadow: 0 .9rem 2.2rem rgb(4 3 12 / .32), inset 0 1px rgb(255 255 255 / .06);
+  -webkit-backdrop-filter: blur(16px) saturate(1.12);
+  backdrop-filter: blur(16px) saturate(1.12);
+  isolation: isolate;
+  mix-blend-mode: normal;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-.4rem) scale(.98);
+  transform-origin: top right;
+  transition: opacity 180ms ease, transform 220ms cubic-bezier(.22, 1, .36, 1);
+}
+
+.site-nav-group:hover .site-nav-dropdown,
+.site-nav-group:focus-within .site-nav-dropdown {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.site-nav-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: .42rem .65rem;
+  border: 0;
+  border-radius: .45rem;
+  background: transparent;
+  color: rgb(255 255 255 / .62);
+  cursor: pointer;
+  font: inherit;
+  font-size: .74rem;
+  line-height: 1.25;
+  text-align: right;
+  white-space: nowrap;
+  transition: color 160ms ease, background-color 160ms ease;
+}
+
+.site-nav-dropdown-item:hover,
+.site-nav-dropdown-item:focus-visible {
+  background: rgb(255 255 255 / .1);
+  color: #fff;
+  outline: none;
+}
+
 @media (prefers-reduced-motion: reduce), (hover: none), (pointer: coarse) {
   .nav-proximity-item {
     will-change: auto;
+  }
+
+  .site-nav-dropdown {
+    transition: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .site-nav-menu {
+    gap: .8rem;
+    font-size: .8rem;
+  }
+
+  .site-nav-dropdown {
+    right: -.3rem;
   }
 }
 
@@ -122,4 +217,273 @@ img {
     opacity: 1;
     transform: translateZ(0);
   }
+}
+
+/* MaiPal 翻书册 —— 与作品区共用纸张、橙色高光和深色舞台。 */
+.page-turn-book {
+  width: min(100%, 420px);
+  color: rgb(255 255 255 / .7);
+}
+
+.page-turn-row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: clamp(5px, 1vw, 14px);
+}
+
+.page-turn-stage {
+  width: 100%;
+  min-width: 0;
+  perspective: 1750px;
+  perspective-origin: 50% 47%;
+  touch-action: pan-y;
+  outline: none;
+}
+
+.page-turn-stage:focus-visible::after {
+  content: "";
+  position: absolute;
+  inset: 4%;
+  border: 1px solid rgb(255 255 255 / .42);
+  border-radius: 14px;
+  pointer-events: none;
+}
+
+.page-turn-book-surface {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1.52;
+  transform-style: preserve-3d;
+  filter: drop-shadow(0 24px 28px rgb(4 2 10 / .32));
+}
+
+.page-turn-book-surface > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.page-turn-leaf {
+  position: absolute;
+  inset: 0 0 0 50%;
+  transform-style: preserve-3d;
+  transform-origin: left center;
+  transition: transform 520ms cubic-bezier(.22, 1, .36, 1);
+  z-index: 3;
+}
+
+.page-turn-leaf.prev {
+  left: 0;
+  right: 50%;
+  transform-origin: right center;
+}
+
+.page-turn-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 0 16px 16px 0;
+  background-position: right center;
+  background-repeat: no-repeat;
+  background-size: 200% 100%;
+  background-color: #e3d8d7;
+}
+
+.page-turn-face.back {
+  transform: rotateY(180deg);
+}
+
+.page-turn-leaf.prev .page-turn-face {
+  border-radius: 16px 0 0 16px;
+  background-position: left center;
+}
+
+.page-turn-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 8;
+  width: 50%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: grab;
+}
+
+.page-turn-zone:active { cursor: grabbing; }
+.page-turn-zone.prev { left: 0; }
+.page-turn-zone.next { right: 0; }
+
+.page-turn-arrow {
+  width: 34px;
+  height: 58px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  color: rgb(255 255 255 / .52);
+  background: transparent;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: color 180ms ease, background-color 180ms ease, transform 180ms ease;
+}
+
+.page-turn-arrow:hover,
+.page-turn-arrow:focus-visible {
+  color: #fff;
+  background: rgb(255 255 255 / .08);
+  outline: none;
+}
+
+.page-turn-arrow:active { transform: scale(.94); }
+.page-turn-arrow:disabled { cursor: default; opacity: .24; }
+
+.page-turn-meta {
+  display: grid;
+  justify-items: center;
+  gap: 9px;
+  margin-top: 14px;
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.page-turn-dots { display: flex; align-items: center; gap: 8px; }
+
+.page-turn-dots button {
+  width: 6px;
+  height: 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 99px;
+  background: rgb(255 255 255 / .18);
+  cursor: pointer;
+  transition: width 260ms ease, background-color 260ms ease;
+}
+
+.page-turn-dots button[aria-current="true"] {
+  width: 22px;
+  background: #ffb074;
+}
+
+.page-turn-meta small {
+  color: rgb(255 255 255 / .3);
+  font-size: 9px;
+  letter-spacing: .13em;
+}
+
+/* 技能区：小技能只有文字，光照只落在文字周围，不绘制卡片边框。 */
+.skills-section {
+  position: relative;
+  min-height: 132svh;
+  padding: 18svh 1.5rem 18svh;
+}
+
+.skills-section-inner {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+}
+
+.skills-section-header { margin-bottom: clamp(2rem, 7vh, 5rem); }
+
+.skills-section-header p {
+  margin: 0 0 .6rem;
+  color: rgb(255 255 255 / .45);
+  font-size: .72rem;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+}
+
+.skills-section-header h2 {
+  margin: 0;
+  font-size: clamp(2rem, 4.5vw, 4rem);
+  font-weight: 600;
+  letter-spacing: -.05em;
+}
+
+.skills-section-header span {
+  display: block;
+  max-width: 38rem;
+  margin-top: 1rem;
+  color: rgb(255 255 255 / .5);
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.skills-section-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(3rem, 8vw, 8rem) clamp(3rem, 9vw, 10rem);
+}
+
+.skill-category-light { --skill-tone: 255, 176, 116; }
+.skill-category-light[data-tone="technical"] { --skill-tone: 117, 158, 190; }
+.skill-category-light[data-tone="tools"] { --skill-tone: 166, 137, 199; }
+.skill-category-light[data-tone="ai"] { --skill-tone: 236, 154, 99; }
+
+.skill-category-light h3 {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 0 1.3rem;
+  color: rgb(255 255 255 / .68);
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .2em;
+}
+
+.skill-category-light h3::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: linear-gradient(90deg, rgb(255 255 255 / .2), transparent);
+}
+
+.skill-word-cloud { display: flex; flex-wrap: wrap; gap: .75rem 1.2rem; }
+
+.skill-word {
+  --skill-glow: 0;
+  --light-x: 50%;
+  --light-y: 50%;
+  position: relative;
+  display: inline-block;
+  color: rgb(255 255 255 / .64);
+  font-size: clamp(.95rem, 1.4vw, 1.16rem);
+  line-height: 1.6;
+  white-space: nowrap;
+  will-change: transform;
+  transition: color 180ms ease, text-shadow 180ms ease;
+}
+
+.skill-word::before {
+  content: "";
+  position: absolute;
+  inset: -8px -14px;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 999px;
+  background: radial-gradient(circle 34px at var(--light-x) var(--light-y), rgb(255 255 255 / .32), transparent 72%), radial-gradient(circle 66px at var(--light-x) var(--light-y), rgb(var(--skill-tone) / .3), transparent 76%);
+  opacity: var(--skill-glow);
+  filter: blur(3px);
+}
+
+.skill-word[data-glowing="true"] {
+  color: #fff;
+  text-shadow: 0 0 1.2rem rgb(var(--skill-tone) / .42);
+}
+
+@media (max-width: 900px) {
+  .skills-section { min-height: 150svh; }
+  .skills-section-grid { gap: 3.5rem 2rem; }
+}
+
+@media (max-width: 640px) {
+  .page-turn-book { width: 100%; }
+  .skills-section { padding-inline: 1.25rem; }
+  .skills-section-grid { grid-template-columns: 1fr; gap: 3rem; }
+  .skill-word-cloud { gap: .7rem 1rem; }
 }

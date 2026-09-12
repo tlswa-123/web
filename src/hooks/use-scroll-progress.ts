@@ -17,7 +17,11 @@ export function useScrollProgress(ref: React.RefObject<HTMLElement | null>) {
     const compute = (scrollTop: number) => {
       const el = ref.current;
       if (!el) return;
-      const rectTop = el.offsetTop;
+      // offsetTop is relative to the nearest positioned ancestor (the
+      // experience cards wrapper is one such nested element), so it can be
+      // zero even when the element starts far down the document. Resolve the
+      // actual document position from its viewport rect instead.
+      const rectTop = el.getBoundingClientRect().top + scrollTop;
       const range = el.offsetHeight - window.innerHeight;
       const p = range > 0 ? (scrollTop - rectTop) / range : 0;
       const clamped = Math.min(1, Math.max(0, p));

@@ -2,8 +2,66 @@
 import { useProximityNav } from "../hooks/use-proximity-nav";
 import { useContext } from "react";
 import { ScrollContext } from "../lib/scroll-context";
+import { WORKS } from "../lib/works";
 
-export function NavBar({ onNavigate }: { onNavigate?: (id: string) => void }) {
+type NavBarProps = {
+  onNavigate?: (id: string) => void;
+  onOpenWork?: (id: string) => void;
+};
+
+type MenuLink = {
+  label: string;
+  id: string;
+  workId?: string;
+};
+
+type MenuItem = {
+  label: string;
+  id: string;
+  children: MenuLink[];
+};
+
+const MENU_ITEMS: MenuItem[] = [
+  {
+    label: "简历",
+    id: "resume",
+    children: [
+      { label: "个人介绍", id: "resume" },
+      { label: "腾讯 · 微信游戏", id: "experience-tencent" },
+      { label: "兴趣岛", id: "experience-xingqudao" },
+      { label: "MaiPal 脉伴", id: "experience-maipal" },
+      { label: "更多经历", id: "experience-early" },
+      { label: "技能", id: "skills" },
+    ],
+  },
+  {
+    label: "作品",
+    id: "work",
+    children: [
+      { label: "作品总览", id: "work" },
+      ...WORKS.map((work) => ({ label: work.title, id: "work", workId: work.id })),
+    ],
+  },
+  {
+    label: "关于",
+    id: "about",
+    children: [
+      { label: "关于我", id: "resume" },
+      { label: "经历与技能", id: "experience" },
+      { label: "一起合作", id: "contact" },
+    ],
+  },
+  {
+    label: "联系",
+    id: "contact",
+    children: [
+      { label: "邮箱", id: "contact" },
+      { label: "微信", id: "contact" },
+    ],
+  },
+];
+
+export function NavBar({ onNavigate, onOpenWork }: NavBarProps) {
   const scroll = useContext(ScrollContext);
   const navRef = useProximityNav<HTMLElement>();
 
@@ -16,8 +74,16 @@ export function NavBar({ onNavigate }: { onNavigate?: (id: string) => void }) {
     }
     const el = document.getElementById(destination);
     if (!el || !scroll) return;
-    const top = el.getBoundingClientRect().top + scroll.scrollTop;
+    const top = el.getBoundingClientRect().top + window.scrollY;
     scroll.scrollTo(top);
+  };
+
+  const goToChild = (link: MenuLink) => {
+    if (link.workId && onOpenWork) {
+      onOpenWork(link.workId);
+      return;
+    }
+    goTo(link.id);
   };
 
   return (
@@ -33,35 +99,33 @@ export function NavBar({ onNavigate }: { onNavigate?: (id: string) => void }) {
       >
         YourName
       </button>
-      <div className="flex items-start gap-6 pt-1 text-sm text-white/90">
-        <button
-          onClick={() => goTo("resume")}
-          className="nav-proximity-item"
-          data-nav-proximity
-        >
-          简历
-        </button>
-        <button
-          onClick={() => goTo("work")}
-          className="nav-proximity-item"
-          data-nav-proximity
-        >
-          作品
-        </button>
-        <button
-          onClick={() => goTo("about")}
-          className="nav-proximity-item"
-          data-nav-proximity
-        >
-          关于
-        </button>
-        <button
-          onClick={() => goTo("contact")}
-          className="nav-proximity-item"
-          data-nav-proximity
-        >
-          联系
-        </button>
+      <div className="site-nav-menu">
+        {MENU_ITEMS.map((item) => (
+          <div key={item.id} className="site-nav-group">
+            <button
+              type="button"
+              onClick={() => goTo(item.id)}
+              className="nav-proximity-item site-nav-trigger"
+              data-nav-proximity
+              aria-haspopup="menu"
+            >
+              {item.label}
+            </button>
+            <div className="site-nav-dropdown" role="menu">
+              {item.children.map((link) => (
+                <button
+                  key={`${item.id}-${link.label}`}
+                  type="button"
+                  role="menuitem"
+                  onClick={() => goToChild(link)}
+                  className="site-nav-dropdown-item"
+                >
+                  {link.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </nav>
   );

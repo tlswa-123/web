@@ -81,7 +81,7 @@ export default function App() {
         <SectionDestination section={url.hash.slice(1) || "top"} />
         {/* 全局唯一背景层：fixed定位，挂载一次，贯穿首页→简历→经历→作品全程 */}
         <GlobalBackground />
-        <NavBar />
+        <NavBar onOpenWork={openWork} />
         <main id="top" className="relative">
           <HeroParallax />
           <ResumeSection />
