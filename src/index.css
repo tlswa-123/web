@@ -253,18 +253,54 @@ img {
 .page-turn-book-surface {
   position: relative;
   width: 100%;
-  aspect-ratio: 1.52;
+  /* The source pitch deck is 16:9; two pages sit side by side in the book. */
+  aspect-ratio: 1.65;
   transform-style: preserve-3d;
   filter: drop-shadow(0 24px 28px rgb(4 2 10 / .32));
 }
 
-.page-turn-book-surface > img {
+.page-turn-spread {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 2px minmax(0, 1fr);
+  overflow: hidden;
+  border-radius: 16px;
+  background: #e3d8d7;
+}
+
+.page-turn-page {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  background: #f7f4ed;
+}
+
+.page-turn-page img {
   display: block;
   width: 100%;
   height: 100%;
-  border-radius: 16px;
+  object-fit: contain;
+  object-position: center;
   user-select: none;
   -webkit-user-drag: none;
+}
+
+.page-turn-page.left img { border-radius: 16px 0 0 16px; }
+.page-turn-page.right img { border-radius: 0 16px 16px 0; }
+
+.page-turn-gutter {
+  z-index: 2;
+  background: linear-gradient(90deg, rgb(55 35 49 / .3), rgb(255 255 255 / .35), rgb(55 35 49 / .3));
+  box-shadow: 0 0 12px rgb(43 27 45 / .24);
+}
+
+.page-turn-paper-shine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 42%, rgb(255 255 255 / .14) 50%, transparent 58%);
+  mix-blend-mode: screen;
 }
 
 .page-turn-leaf {
@@ -288,10 +324,18 @@ img {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   border-radius: 0 16px 16px 0;
-  background-position: right center;
-  background-repeat: no-repeat;
-  background-size: 200% 100%;
   background-color: #e3d8d7;
+  overflow: hidden;
+}
+
+.page-turn-face img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .page-turn-face.back {
@@ -300,7 +344,6 @@ img {
 
 .page-turn-leaf.prev .page-turn-face {
   border-radius: 16px 0 0 16px;
-  background-position: left center;
 }
 
 .page-turn-zone {

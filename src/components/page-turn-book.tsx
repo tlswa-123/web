@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { assetPath } from "../lib/asset-path";
 
 type Turn = {
   direction: "next" | "prev";
@@ -8,39 +9,40 @@ type Turn = {
   settling?: "commit" | "cancel";
 };
 
-const PAGE_COUNT = 4;
 const clamp = (value: number) => Math.min(1, Math.max(0, value));
 
-function escapeXml(value: string) {
-  return value.replace(/[&<>"']/g, (character) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;",
-  })[character] ?? character);
-}
+type Spread = {
+  left: string;
+  right: string;
+  leftPage: number;
+  rightPage: number;
+};
 
-function makeBlankSpread(index: number) {
-  const page = String(index * 2 + 1).padStart(2, "0");
-  const nextPage = String(index * 2 + 2).padStart(2, "0");
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 920">
-    <defs>
-      <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0e9e4"/><stop offset=".55" stop-color="#e3d8d7"/><stop offset="1" stop-color="#cfc0c3"/></linearGradient>
-      <linearGradient id="left" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity=".13"/><stop offset=".84" stop-color="#432e43" stop-opacity=".02"/><stop offset="1" stop-color="#342536" stop-opacity=".16"/></linearGradient>
-      <linearGradient id="right" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#fff" stop-opacity=".11"/><stop offset=".84" stop-color="#432e43" stop-opacity=".02"/><stop offset="1" stop-color="#342536" stop-opacity=".14"/></linearGradient>
-      <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".78" numOctaves="3" seed="${index + 3}"/><feColorMatrix values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 .055 0"/></filter>
-    </defs>
-    <rect x="16" y="18" width="1368" height="884" rx="30" fill="url(#paper)"/>
-    <rect x="16" y="18" width="684" height="884" rx="30" fill="url(#left)"/>
-    <rect x="700" y="18" width="684" height="884" rx="30" fill="url(#right)"/>
-    <rect x="16" y="18" width="1368" height="884" rx="30" filter="url(#grain)" opacity=".9"/>
-    <path d="M700 18V902" stroke="#5c4558" stroke-opacity=".20"/><path d="M697 18V902" stroke="#fff" stroke-opacity=".22"/>
-    <style>text{font-family:Inter,'PingFang SC','Microsoft YaHei',sans-serif;fill:#342836}.k{font-weight:700;letter-spacing:7px;fill:#8c6570}.n{font-weight:700;fill:#aa6f63}</style>
-    <text x="642" y="830" text-anchor="end" class="n" font-size="18">${escapeXml(page)}</text><text x="1318" y="830" text-anchor="end" class="n" font-size="18">${escapeXml(nextPage)}</text>
-    <path d="M82 650H315" stroke="#a56d66" stroke-width="2" stroke-opacity=".65"/><path d="M762 650H995" stroke="#a56d66" stroke-width="2" stroke-opacity=".65"/>
-  </svg>`;
-  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+// The selected pitch-deck pages are paired exactly as requested:
+// 10/7, 11/12, 13/6, and 8/9 (left/right).
+const SPREADS: Spread[] = [
+  { left: assetPath("works/maipal/pages/page-10.png"), right: assetPath("works/maipal/pages/page-07.png"), leftPage: 10, rightPage: 7 },
+  { left: assetPath("works/maipal/pages/page-11.png"), right: assetPath("works/maipal/pages/page-12.png"), leftPage: 11, rightPage: 12 },
+  { left: assetPath("works/maipal/pages/page-13.png"), right: assetPath("works/maipal/pages/page-06.png"), leftPage: 13, rightPage: 6 },
+  { left: assetPath("works/maipal/pages/page-08.png"), right: assetPath("works/maipal/pages/page-09.png"), leftPage: 8, rightPage: 9 },
+];
+const PAGE_COUNT = SPREADS.length;
+
+function SpreadView({ spread }: { spread: Spread }) {
+  return (
+    <div className="page-turn-spread">
+      <div className="page-turn-page left">
+        <img src={spread.left} alt={`MaiPal 项目第 ${spread.leftPage} 页`} draggable={false} />
+      </div>
+      <div className="page-turn-gutter" aria-hidden="true" />
+      <div className="page-turn-page right">
+        <img src={spread.right} alt={`MaiPal 项目第 ${spread.rightPage} 页`} draggable={false} />
+      </div>
+    </div>
+  );
 }
 
 export function PageTurnBook() {
-  const pages = useMemo(() => Array.from({ length: PAGE_COUNT }, (_, index) => makeBlankSpread(index)), []);
   const stageRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ direction: "next" | "prev"; startX: number; width: number; moved: number } | null>(null);
   const timerRef = useRef<number | null>(null);
@@ -115,9 +117,13 @@ export function PageTurnBook() {
     if (stageRef.current?.hasPointerCapture(event.pointerId)) stageRef.current.releasePointerCapture(event.pointerId);
   };
 
-  const currentImage = pages[pageIndex];
-  const turnImage = turn ? pages[turn.from] : currentImage;
-  const nextImage = turn ? pages[turn.to] : currentImage;
+  const currentSpread = SPREADS[pageIndex];
+  const turnFront = turn
+    ? (turn.direction === "next" ? SPREADS[turn.from].right : SPREADS[turn.from].left)
+    : null;
+  const turnBack = turn
+    ? (turn.direction === "next" ? SPREADS[turn.to].left : SPREADS[turn.to].right)
+    : null;
   const rotation = turn ? (turn.direction === "next" ? -180 : 180) * turn.progress : 0;
 
   return (
@@ -126,11 +132,11 @@ export function PageTurnBook() {
         <button type="button" className="page-turn-arrow" onClick={() => step("prev")} disabled={pageIndex === 0 || Boolean(turn)} aria-label="上一页">←</button>
         <div ref={stageRef} className="page-turn-stage" tabIndex={0} role="region" aria-label="创业项目翻页册，使用左右方向键翻页" onKeyDown={onKeyDown} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}>
           <div className="page-turn-book-surface">
-            <img src={currentImage} alt="空白项目页" />
+            <SpreadView spread={currentSpread} />
             {turn && (
               <div className={`page-turn-leaf ${turn.direction}`} style={{ transform: `rotateY(${rotation}deg)`, transition: turn.settling ? "transform 520ms cubic-bezier(.22,1,.36,1)" : undefined }}>
-                <div className="page-turn-face front" style={{ backgroundImage: `url(${turnImage})` }} />
-                <div className="page-turn-face back" style={{ backgroundImage: `url(${nextImage})` }} />
+                <div className="page-turn-face front"><img src={turnFront ?? ""} alt="" draggable={false} /></div>
+                <div className="page-turn-face back"><img src={turnBack ?? ""} alt="" draggable={false} /></div>
               </div>
             )}
             <button type="button" data-turn-zone="prev" className="page-turn-zone prev" aria-label="拖动到上一页" />
@@ -142,7 +148,7 @@ export function PageTurnBook() {
       <div className="page-turn-meta">
         <span>创业项目</span>
         <div className="page-turn-dots" aria-label="选择项目页">
-          {pages.map((_, index) => <button key={index} type="button" aria-label={`打开第 ${index + 1} 页`} aria-current={index === pageIndex} onClick={() => { if (!turn) setPageIndex(index); }} />)}
+          {SPREADS.map((spread, index) => <button key={`${spread.leftPage}-${spread.rightPage}`} type="button" aria-label={`打开第 ${index + 1} 组`} aria-current={index === pageIndex} onClick={() => { if (!turn) setPageIndex(index); }} />)}
         </div>
         <small>拖动纸张翻页</small>
       </div>
