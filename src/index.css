@@ -221,7 +221,7 @@ img {
 
 /* MaiPal 翻书册 —— 与作品区共用纸张、橙色高光和深色舞台。 */
 .page-turn-book {
-  width: min(100%, 420px);
+  width: min(100%, 760px);
   color: rgb(255 255 255 / .7);
 }
 
@@ -253,8 +253,8 @@ img {
 .page-turn-book-surface {
   position: relative;
   width: 100%;
-  /* The source pitch deck is 16:9; two pages sit side by side in the book. */
-  aspect-ratio: 1.65;
+  /* Each source page is 16:9; a two-page spread is exactly 32:9. */
+  aspect-ratio: 32 / 9;
   transform-style: preserve-3d;
   filter: drop-shadow(0 24px 28px rgb(4 2 10 / .32));
 }

@@ -291,7 +291,7 @@ export function ExperienceSection() {
                 </div>
 
                 {exp.id === "maipal" ? (
-                  <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(300px,380px)] lg:items-center">
+                  <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(360px,520px)] lg:items-center">
                     <div>
                       <p className="mb-10 max-w-3xl border-l-2 border-[#ff8a4c]/60 pl-5 text-lg leading-relaxed text-white/80 md:text-xl">
                         {exp.headline}
