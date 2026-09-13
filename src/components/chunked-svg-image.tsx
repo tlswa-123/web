@@ -26,7 +26,10 @@ export function ChunkedSvgImage({ assetName, partCount, alt, className }: Chunke
         const parts = await Promise.all(
           Array.from({ length: partCount }, (_, index) => {
             const suffix = String(index).padStart(3, "0");
-            const relativePart = `${assetName}.part-${suffix}`;
+            // End each chunk with .svg so GitHub Pages serves it as a normal
+            // same-origin static resource instead of treating an unknown
+            // extension as a download.
+            const relativePart = `${assetName}-chunk-${suffix}.svg`;
             const url = pageAssetOrigin
               ? `${pageAssetOrigin.replace(/\/$/, "")}/${relativePart}`
               : assetPath(relativePart);
