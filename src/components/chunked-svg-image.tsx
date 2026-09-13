@@ -15,6 +15,7 @@ type ChunkedSvgImageProps = {
  */
 export function ChunkedSvgImage({ assetName, partCount, alt, className }: ChunkedSvgImageProps) {
   const [src, setSrc] = useState<string | null>(null);
+  const pageAssetOrigin = import.meta.env.VITE_PAGE_ASSET_ORIGIN;
 
   useEffect(() => {
     let cancelled = false;
@@ -25,7 +26,11 @@ export function ChunkedSvgImage({ assetName, partCount, alt, className }: Chunke
         const parts = await Promise.all(
           Array.from({ length: partCount }, (_, index) => {
             const suffix = String(index).padStart(3, "0");
-            return fetch(assetPath(`${assetName}.part-${suffix}`)).then((response) => {
+            const relativePart = `${assetName}.part-${suffix}`;
+            const url = pageAssetOrigin
+              ? `${pageAssetOrigin.replace(/\/$/, "")}/${relativePart}`
+              : assetPath(relativePart);
+            return fetch(url).then((response) => {
               if (!response.ok) throw new Error(`Unable to load ${assetName} part ${index}`);
               return response.arrayBuffer();
             });
