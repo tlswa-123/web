@@ -2,6 +2,7 @@ import { useRef, useMemo } from "react";
 import { useScrollProgress } from "../hooks/use-scroll-progress";
 import { useScroll } from "../lib/scroll-context";
 import { PageTurnBook } from "../components/page-turn-book";
+import { ChunkedSvgImage } from "../components/chunked-svg-image";
 import { SkillsSection } from "./skills-section";
 
 /**
@@ -221,6 +222,11 @@ export function ExperienceSection() {
         {EXPERIENCES.map((exp, index) => {
           const isActive = index === activeIndex;
           const isPast = index < activeIndex;
+          const screenshotAsset = exp.id === "xingqudao"
+            ? { name: "experience/xingqudao", parts: 5 }
+            : exp.id === "tencent"
+            ? { name: "experience/tencent", parts: 14 }
+            : null;
           const modulesContent = (
             <div className={`grid gap-8 ${exp.modules.length >= 3 ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
               {exp.modules.map((mod) => (
@@ -241,10 +247,14 @@ export function ExperienceSection() {
                 </div>
               ))}
 
-              {exp.screenshotPlaceholder && exp.id !== "maipal" && (
-                <div className="mt-4 md:col-span-full">
-                  <div className="rounded-xl border border-dashed border-white/20 bg-white/5 p-8 text-center text-sm text-white/30">
-                    📷 截图占位：{exp.screenshotPlaceholder}
+              {screenshotAsset && (
+                <div className="experience-screenshot-wrap mt-4 md:col-span-full">
+                  <div className="experience-screenshot-frame">
+                    <ChunkedSvgImage
+                      assetName={screenshotAsset.name}
+                      partCount={screenshotAsset.parts}
+                      alt={`${exp.company} 项目截图`}
+                    />
                   </div>
                 </div>
               )}
@@ -259,7 +269,6 @@ export function ExperienceSection() {
               ))}
             </div>
           );
-
           return (
             <div
               key={exp.id}

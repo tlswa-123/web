@@ -414,9 +414,32 @@ img {
 }
 
 .page-turn-meta small {
-  color: rgb(255 255 255 / .3);
-  font-size: 9px;
-  letter-spacing: .13em;
+	  color: rgb(255 255 255 / .3);
+	  font-size: 9px;
+	  letter-spacing: .13em;
+	}
+
+/* 经历卡片的 SVG 截图：按源文件比例显示，避免被矮占位框拉伸。 */
+.experience-screenshot-wrap {
+  width: 100%;
+}
+
+.experience-screenshot-frame {
+  width: min(100%, 48rem);
+  margin-inline: auto;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / .14);
+  border-radius: 18px;
+  background: rgb(255 255 255 / .04);
+  box-shadow: 0 18px 40px rgb(4 2 10 / .24);
+}
+
+.experience-screenshot-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 /* 技能区：小技能只有文字，光照只落在文字周围，不绘制卡片边框。 */
