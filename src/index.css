@@ -39,6 +39,27 @@ img {
   -webkit-user-drag: none;
 }
 
+/* 让指针在整站背景上留下一个柔和、持续的光斑；位置由视差 hook 的
+   --mx / --my 提供，停下鼠标后光斑会停留在最后的位置。 */
+.scene-pointer-light {
+  position: absolute;
+  inset: -18%;
+  z-index: 3;
+  pointer-events: none;
+  opacity: .82;
+  transform: translate3d(calc(var(--mx, 0) * 10vw), calc(var(--my, 0) * 10vh), 0);
+  background:
+    radial-gradient(circle at 50% 50%, rgb(255 222 178 / .20) 0, rgb(255 204 146 / .10) 18%, transparent 56%),
+    radial-gradient(circle at 50% 50%, rgb(255 255 255 / .08) 0, transparent 30%);
+  filter: blur(20px);
+  mix-blend-mode: screen;
+  transition: opacity 400ms ease;
+}
+
+@media (prefers-reduced-motion: reduce), (hover: none), (pointer: coarse) {
+  .scene-pointer-light { opacity: .3; transform: none; }
+}
+
 /* 导航保留原来的排布与颜色，只增加连续的距离感应和指针高光。 */
 .nav-proximity-item {
   --spec-angle: 2.4rad;
@@ -221,8 +242,24 @@ img {
 
 /* MaiPal 翻书册 —— 与作品区共用纸张、橙色高光和深色舞台。 */
 .page-turn-book {
-  width: min(100%, 760px);
+  width: min(100%, 900px);
   color: rgb(255 255 255 / .7);
+}
+
+/* MaiPal：文字占上半区，翻书占下半区，避免两列布局把正文挤窄。 */
+.maipal-layout {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: clamp(1rem, 2.5vh, 1.75rem);
+}
+
+.maipal-copy { width: 100%; }
+
+.maipal-book-wrap {
+  display: flex;
+  width: 100%;
+  justify-content: center;
 }
 
 .page-turn-row {
@@ -549,6 +586,10 @@ img {
 
 @media (max-width: 640px) {
   .page-turn-book { width: 100%; }
+  .maipal-layout { gap: .5rem; }
+  .maipal-copy > .grid { gap: 1rem; }
+  .maipal-copy > .mb-5 { margin-bottom: .75rem; }
+  .maipal-copy > .mt-8 { margin-top: .75rem; }
   .skills-section { padding-inline: 1.25rem; }
   .skills-section-grid { grid-template-columns: 1fr; gap: 3rem; }
   .skill-word-cloud { gap: .7rem 1rem; }

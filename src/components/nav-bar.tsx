@@ -97,7 +97,7 @@ export function NavBar({ onNavigate, onOpenWork }: NavBarProps) {
         className="nav-proximity-item text-lg font-semibold tracking-wide text-white"
         data-nav-proximity
       >
-        YourName
+        金玺 JIN Xi
       </button>
       <div className="site-nav-menu">
         {MENU_ITEMS.map((item) => (

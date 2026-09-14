@@ -24,12 +24,12 @@ export function GlobalBackground() {
 
   return (
     <div
+      ref={stageRef}
       className="fixed inset-0 z-0 overflow-hidden bg-[#12111f]"
       style={{ opacity: cam.sceneOpacity }}
       aria-hidden
     >
       <SceneStage
-        ref={stageRef}
         stageHeight={STAGE_HEIGHT_CSS}
         txPct={cam.txPct}
         tyPct={cam.tyPct}
@@ -42,6 +42,7 @@ export function GlobalBackground() {
         className="pointer-events-none absolute inset-0"
         style={{ backgroundColor: `rgba(18, 17, 31, ${cam.darkOpacity})` }}
       />
+      <div className="scene-pointer-light" aria-hidden="true" />
     </div>
   );
 }
