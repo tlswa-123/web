@@ -1,6 +1,5 @@
 import { useRef } from "react";
 import { CircularGallery } from "../components/circular-gallery";
-import { HangingSkillCards } from "../components/hanging-skill-cards";
 import { WORKS } from "../lib/works";
 import { useEntryReveal } from "../hooks/use-entry-reveal";
 
@@ -29,9 +28,9 @@ export function WorkSection({ onOpenWork }: { onOpenWork: (id: string) => void }
     <section ref={sectionRef} id="work" className="relative z-10 text-white">
       {/* 内容区域 sticky 固定一屏 */}
       <div className="sticky top-0 flex h-svh overflow-hidden">
-        {/* 左侧 + 中间：画廊 */}
+        {/* 作品画廊：移除右侧技能栏后，作品在整屏内容区居中。 */}
         <div
-          className="flex flex-1 flex-col items-center justify-center"
+          className="flex w-full flex-col items-center justify-center"
           style={{
             opacity: contentReveal,
             transform: `translateY(${(1 - contentReveal) * 20}px)`,
@@ -46,7 +45,7 @@ export function WorkSection({ onOpenWork }: { onOpenWork: (id: string) => void }
             </div>
           </div>
 
-          <div className="w-full max-w-[70vw]">
+          <div className="w-full max-w-6xl px-6">
             <CircularGallery
               items={GALLERY_ITEMS}
               bend={3}
@@ -56,17 +55,6 @@ export function WorkSection({ onOpenWork }: { onOpenWork: (id: string) => void }
           <p className="mt-4 text-center text-xs tracking-[0.25em] text-white/35">
             拖拽或滚动浏览 · 点击作品查看详情
           </p>
-        </div>
-
-        {/* 右侧：悬挂技能卡片 */}
-        <div
-          className="hidden w-64 shrink-0 pr-6 lg:block"
-          style={{
-            opacity: contentReveal,
-            transform: `translateY(${(1 - contentReveal) * 30}px)`,
-          }}
-        >
-          <HangingSkillCards />
         </div>
       </div>
 

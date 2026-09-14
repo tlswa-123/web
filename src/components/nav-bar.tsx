@@ -27,6 +27,12 @@ const MENU_ITEMS: MenuItem[] = [
     id: "resume",
     children: [
       { label: "个人介绍", id: "resume" },
+    ],
+  },
+  {
+    label: "经历",
+    id: "experience",
+    children: [
       { label: "腾讯 · 微信游戏", id: "experience-tencent" },
       { label: "兴趣岛", id: "experience-xingqudao" },
       { label: "MaiPal 脉伴", id: "experience-maipal" },
@@ -40,15 +46,6 @@ const MENU_ITEMS: MenuItem[] = [
     children: [
       { label: "作品总览", id: "work" },
       ...WORKS.map((work) => ({ label: work.title, id: "work", workId: work.id })),
-    ],
-  },
-  {
-    label: "关于",
-    id: "about",
-    children: [
-      { label: "关于我", id: "resume" },
-      { label: "经历与技能", id: "experience" },
-      { label: "一起合作", id: "contact" },
     ],
   },
   {
@@ -66,8 +63,7 @@ export function NavBar({ onNavigate, onOpenWork }: NavBarProps) {
   const navRef = useProximityNav<HTMLElement>();
 
   const goTo = (id: string) => {
-    // “关于”的个人介绍位于简历区；站内与阅读页使用同一个目的地。
-    const destination = id === "about" ? "resume" : id;
+    const destination = id;
     if (onNavigate) {
       onNavigate(destination);
       return;
