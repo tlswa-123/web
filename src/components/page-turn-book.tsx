@@ -46,37 +46,67 @@ export function PageTurnBook() {
   const stageRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ direction: "next" | "prev"; startX: number; width: number; moved: number } | null>(null);
   const timerRef = useRef<number | null>(null);
+  const turnRef = useRef<Turn | null>(null);
   const [pageIndex, setPageIndex] = useState(0);
   const [turn, setTurn] = useState<Turn | null>(null);
+
+  useEffect(() => {
+    turnRef.current = turn;
+  }, [turn]);
 
   useEffect(() => () => {
     if (timerRef.current !== null) window.clearTimeout(timerRef.current);
   }, []);
 
-  const finishTurn = (direction: "next" | "prev", commit: boolean) => {
-    if (!turn) return;
-    const next = turn.to;
-    setTurn({ ...turn, direction, settling: commit ? "commit" : "cancel", progress: commit ? 1 : 0 });
-    if (timerRef.current !== null) window.clearTimeout(timerRef.current);
-    timerRef.current = window.setTimeout(() => {
-      setTurn(null);
-      if (commit) setPageIndex(next);
+  const clearTimer = () => {
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current);
       timerRef.current = null;
-    }, 560);
+    }
+  };
+
+  const finishTurn = (active: Turn, commit: boolean) => {
+    const settled: Turn = { ...active, settling: commit ? "commit" : "cancel", progress: commit ? 1 : 0 };
+    turnRef.current = settled;
+    setTurn(settled);
+    clearTimer();
+    timerRef.current = window.setTimeout(() => {
+      if (commit) setPageIndex(active.to);
+      turnRef.current = null;
+      setTurn(null);
+      timerRef.current = null;
+    }, 540);
   };
 
   const startTurn = (direction: "next" | "prev") => {
-    if (turn) return;
+    if (turnRef.current) return false;
     const to = direction === "next" ? pageIndex + 1 : pageIndex - 1;
-    if (to < 0 || to >= PAGE_COUNT) return;
-    setTurn({ direction, from: pageIndex, to, progress: 0 });
+    if (to < 0 || to >= PAGE_COUNT) return false;
+    const nextTurn: Turn = { direction, from: pageIndex, to, progress: 0 };
+    turnRef.current = nextTurn;
+    setTurn(nextTurn);
+    return true;
   };
 
   const step = (direction: "next" | "prev") => {
-    startTurn(direction);
-    window.setTimeout(() => setTurn((active) => active && !active.settling ? { ...active, settling: "commit", progress: 1 } : active), 24);
-    window.setTimeout(() => setPageIndex((current) => direction === "next" ? Math.min(PAGE_COUNT - 1, current + 1) : Math.max(0, current - 1)), 580);
-    window.setTimeout(() => setTurn(null), 600);
+    if (!startTurn(direction)) return;
+    // Start the CSS rotation on the next frame so a click still has a visible
+    // page lift instead of jumping straight to the settled spread.
+    requestAnimationFrame(() => {
+      const active = turnRef.current;
+      if (!active || active.direction !== direction || active.settling) return;
+      const settled: Turn = { ...active, settling: "commit", progress: 1 };
+      turnRef.current = settled;
+      setTurn(settled);
+    });
+    clearTimer();
+    const target = direction === "next" ? pageIndex + 1 : pageIndex - 1;
+    timerRef.current = window.setTimeout(() => {
+      setPageIndex(target);
+      turnRef.current = null;
+      setTurn(null);
+      timerRef.current = null;
+    }, 540);
   };
 
   const onKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
@@ -88,32 +118,56 @@ export function PageTurnBook() {
   const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     const stage = stageRef.current;
     const zone = (event.target as HTMLElement).closest<HTMLElement>("[data-turn-zone]");
-    if (!stage || !zone || event.button !== 0 || turn) return;
+    if (!stage || !zone || event.button !== 0 || turnRef.current) return;
     const direction = zone.dataset.turnZone as "next" | "prev";
     const to = direction === "next" ? pageIndex + 1 : pageIndex - 1;
     if (to < 0 || to >= PAGE_COUNT) return;
     event.preventDefault();
     stage.setPointerCapture(event.pointerId);
-    setTurn({ direction, from: pageIndex, to, progress: 0 });
+    const nextTurn: Turn = { direction, from: pageIndex, to, progress: 0 };
+    turnRef.current = nextTurn;
+    setTurn(nextTurn);
     dragRef.current = { direction, startX: event.clientX, width: stage.clientWidth, moved: 0 };
   };
 
   const onPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
     const drag = dragRef.current;
-    if (!drag) return;
+    if (!drag) {
+      const stage = stageRef.current;
+      if (stage) {
+        const rect = stage.getBoundingClientRect();
+        const nx = Math.max(-1, Math.min(1, (event.clientX - (rect.left + rect.width / 2)) / Math.max(1, rect.width * .62)));
+        const ny = Math.max(-1, Math.min(1, (event.clientY - (rect.top + rect.height / 2)) / Math.max(1, rect.height * .9)));
+        stage.style.setProperty("--book-rx", `${(-ny * 3.2).toFixed(2)}deg`);
+        stage.style.setProperty("--book-ry", `${(nx * 5.2).toFixed(2)}deg`);
+      }
+      return;
+    }
     drag.moved = Math.max(drag.moved, Math.abs(event.clientX - drag.startX));
     const raw = (drag.direction === "next" ? drag.startX - event.clientX : event.clientX - drag.startX) / Math.max(1, drag.width * .62);
-    setTurn((active) => active && !active.settling ? { ...active, progress: clamp(raw) } : active);
+    setTurn((active) => {
+      if (!active || active.settling) return active;
+      const next = { ...active, progress: clamp(raw) };
+      turnRef.current = next;
+      return next;
+    });
+  };
+
+  const resetTilt = () => {
+    const stage = stageRef.current;
+    if (!stage || dragRef.current) return;
+    stage.style.setProperty("--book-rx", "0deg");
+    stage.style.setProperty("--book-ry", "0deg");
   };
 
   const onPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
     const drag = dragRef.current;
     if (!drag) return;
     dragRef.current = null;
-    const active = turn;
+    const active = turnRef.current;
     if (!active) return;
-    if (drag.moved < 7) finishTurn(drag.direction, true);
-    else finishTurn(drag.direction, active.progress > .42);
+    if (drag.moved < 7) finishTurn(active, true);
+    else finishTurn(active, active.progress > .42);
     if (stageRef.current?.hasPointerCapture(event.pointerId)) stageRef.current.releasePointerCapture(event.pointerId);
   };
 
@@ -130,9 +184,10 @@ export function PageTurnBook() {
     <div className="page-turn-book" aria-label="创业项目翻页册">
       <div className="page-turn-row">
         <button type="button" className="page-turn-arrow" onClick={() => step("prev")} disabled={pageIndex === 0 || Boolean(turn)} aria-label="上一页">←</button>
-        <div ref={stageRef} className="page-turn-stage" tabIndex={0} role="region" aria-label="创业项目翻页册，使用左右方向键翻页" onKeyDown={onKeyDown} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}>
+        <div ref={stageRef} className="page-turn-stage" tabIndex={0} role="region" aria-label="创业项目翻页册，使用左右方向键翻页" onKeyDown={onKeyDown} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp} onPointerLeave={resetTilt}>
           <div className="page-turn-book-surface">
             <SpreadView spread={currentSpread} />
+            <div className="page-turn-paper-shine" aria-hidden="true" />
             {turn && (
               <div className={`page-turn-leaf ${turn.direction}`} style={{ transform: `rotateY(${rotation}deg)`, transition: turn.settling ? "transform 520ms cubic-bezier(.22,1,.36,1)" : undefined }}>
                 <div className="page-turn-face front"><img src={turnFront ?? ""} alt="" draggable={false} /></div>

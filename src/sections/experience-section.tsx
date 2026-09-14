@@ -155,14 +155,19 @@ export function ExperienceSection() {
   const scroll = useScroll();
   const progress = useScrollProgress(cardsRef);
 
-  // 根据进度确定当前活跃的经历索引
+  // 根据每一张 sticky 卡片真实进入视口的距离确定当前索引。
+  // 之前把 progress / 0.75 再均分成四段，会让第二、三张卡片还没
+  // 到视口中央就提前切换，最后一张甚至会在进入视口前就被激活。
   const activeIndex = useMemo(() => {
-    // 把进度均分成 N 段（最后一屏多给一点空间）
-    const total = EXPERIENCES.length;
-    // 滚动区域的前 80% 用于4屏翻页，后 20% 是推进缓冲区
-    const contentProgress = Math.min(1, progress / 0.75);
-    const idx = Math.floor(contentProgress * total);
-    return Math.min(idx, total - 1);
+    const cards = cardsRef.current;
+    if (!cards) return 0;
+    const cardsTop = cards.getBoundingClientRect().top + window.scrollY;
+    const relative = Math.max(0, window.scrollY - cardsTop);
+    // Browsers round scrollTo targets to device pixels; allow a tiny 8px
+    // tolerance so a card that is visually already at the sticky edge does
+    // not leave the previous page active for one more frame.
+    const viewport = Math.max(1, window.innerHeight);
+    return Math.min(EXPERIENCES.length - 1, Math.floor((relative + Math.min(8, viewport * .02)) / viewport));
   }, [progress]);
 
   const currentNavId = progress >= 0.96 ? "skills" : EXPERIENCES[activeIndex].id;
@@ -177,7 +182,9 @@ export function ExperienceSection() {
     const index = EXPERIENCES.findIndex((item) => item.id === id);
     if (index < 0) return;
     const cardsTop = cards.getBoundingClientRect().top + window.scrollY;
-    scroll.scrollTo(cardsTop + index * window.innerHeight);
+    // Nudge the target a few pixels past the boundary so sticky positioning
+    // settles on the requested card even on fractional-DPI viewports.
+    scroll.scrollTo(cardsTop + index * window.innerHeight + 8);
   };
 
   const navigationItems = [
@@ -216,8 +223,9 @@ export function ExperienceSection() {
         </nav>
       </div>
 
-      {/* 4屏 sticky 容器 */}
-      <div ref={cardsRef} className="relative" style={{ height: `${EXPERIENCES.length * 100 + 50}svh` }}>
+      {/* 逐屏 sticky 容器：四张经历各自占满一屏 */}
+      {/* 每张卡片占满一整屏，末尾额外留一屏让最后一张完整停留。 */}
+      <div ref={cardsRef} className="relative" style={{ height: `${(EXPERIENCES.length + 1) * 100}svh` }}>
         {/* 各经历全屏卡片 — sticky 堆叠 */}
         {EXPERIENCES.map((exp, index) => {
           const isActive = index === activeIndex;
@@ -274,11 +282,11 @@ export function ExperienceSection() {
               key={exp.id}
               id={`experience-${exp.id}`}
               data-experience-card={exp.id}
-              className="sticky top-0 h-svh flex items-center justify-start overflow-hidden"
+              className={`sticky top-0 h-svh flex items-center justify-start overflow-hidden ${isActive ? "pointer-events-auto" : "pointer-events-none"}`}
               style={{ zIndex: index + 1 }}
             >
               <div
-                className={`w-full max-w-5xl mx-auto px-6 md:px-16 transition-all duration-500 ${
+                className={`w-full max-w-6xl mx-auto px-6 md:px-12 transition-all duration-500 ${
                   isActive
                     ? "opacity-100 translate-y-0"
                     : isPast
@@ -287,7 +295,7 @@ export function ExperienceSection() {
                 }`}
               >
                 {/* 身份头 */}
-                <div className="mb-8">
+                <div className={`experience-card-heading ${exp.id === "maipal" ? "mb-4" : "mb-8"}`}>
                   <h2 className="text-3xl md:text-5xl font-bold tracking-tight">
                     {exp.company}
                   </h2>

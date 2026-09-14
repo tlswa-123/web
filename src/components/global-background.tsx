@@ -42,6 +42,21 @@ export function GlobalBackground() {
         className="pointer-events-none absolute inset-0"
         style={{ backgroundColor: `rgba(18, 17, 31, ${cam.darkOpacity})` }}
       />
+      {/* A clipped bright pass re-adds the scene's own luminance under the
+          pointer.  This follows the reference interaction more closely than
+          placing a flat white circle over the artwork. */}
+      <div className="scene-light-pass" aria-hidden="true">
+        <SceneStage
+          stageHeight={STAGE_HEIGHT_CSS}
+          txPct={cam.txPct}
+          tyPct={cam.tyPct}
+          scale={cam.scale}
+          sunDropPct={cam.sunDropPct}
+          mouseParallax={cam.parallaxStrength > 0}
+          marginScale={cam.marginScale}
+          opacity={cam.sceneOpacity}
+        />
+      </div>
       <div className="scene-pointer-light" aria-hidden="true" />
     </div>
   );

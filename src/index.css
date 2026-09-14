@@ -39,25 +39,45 @@ img {
   -webkit-user-drag: none;
 }
 
-/* 让指针在整站背景上留下一个柔和、持续的光斑；位置由视差 hook 的
-   --mx / --my 提供，停下鼠标后光斑会停留在最后的位置。 */
-.scene-pointer-light {
+/* 指针光照：用同一套场景再渲染一次，并以柔和圆形遮罩截取，
+   这样鼠标下方是“原图被照亮”，而不是一块盖在图上的白色圆斑。 */
+.scene-light-pass {
   position: absolute;
-  inset: -18%;
-  z-index: 3;
+  inset: 0;
+  z-index: 2;
   pointer-events: none;
-  opacity: .82;
-  transform: translate3d(calc(var(--mx, 0) * 10vw), calc(var(--my, 0) * 10vh), 0);
-  background:
-    radial-gradient(circle at 50% 50%, rgb(255 222 178 / .20) 0, rgb(255 204 146 / .10) 18%, transparent 56%),
-    radial-gradient(circle at 50% 50%, rgb(255 255 255 / .08) 0, transparent 30%);
-  filter: blur(20px);
-  mix-blend-mode: screen;
+  /* A small re-lit pass is enough to reveal detail without turning into a
+     hard spotlight on top of the artwork. */
+  opacity: calc(var(--light-opacity, 0) * .34);
+  overflow: hidden;
+  filter: brightness(1.1) saturate(1.04);
+  -webkit-mask: radial-gradient(
+    circle clamp(150px, 24vw, 360px) at var(--light-x, 50%) var(--light-y, 50%),
+    rgb(0 0 0 / .72) 0%,
+    rgb(0 0 0 / .42) 42%,
+    transparent 100%
+  );
+  mask: radial-gradient(
+    circle clamp(150px, 24vw, 360px) at var(--light-x, 50%) var(--light-y, 50%),
+    rgb(0 0 0 / .72) 0%,
+    rgb(0 0 0 / .42) 42%,
+    transparent 100%
+  );
   transition: opacity 400ms ease;
 }
 
-@media (prefers-reduced-motion: reduce), (hover: none), (pointer: coarse) {
-  .scene-pointer-light { opacity: .3; transform: none; }
+/* The marker is intentionally invisible; the hook writes the shared light
+   variables here so React camera rerenders cannot clear them. */
+.scene-pointer-light {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-light-pass { opacity: 0; }
 }
 
 /* 导航保留原来的排布与颜色，只增加连续的距离感应和指针高光。 */
@@ -142,6 +162,21 @@ img {
   display: flex;
   align-items: flex-end;
   flex-direction: column;
+}
+
+/* Keep a small, invisible hit area between the trigger and its floating menu.
+   Without this bridge the group briefly loses :hover while the pointer
+   crosses the visual gap, so the menu disappears before its items can be
+   reached and clicked. */
+.site-nav-group::before {
+  content: "";
+  position: absolute;
+  top: 100%;
+  right: -.7rem;
+  left: -.7rem;
+  height: .75rem;
+  z-index: 59;
+  pointer-events: auto;
 }
 
 .site-nav-trigger {
@@ -242,7 +277,10 @@ img {
 
 /* MaiPal 翻书册 —— 与作品区共用纸张、橙色高光和深色舞台。 */
 .page-turn-book {
-  width: min(100%, 900px);
+  /* The source pages are 16:9, so the spread needs the full content width
+     to remain readable.  Let the book use the whole Maipal column instead
+     of shrinking to the old 900px cap. */
+  width: min(100%, 1120px);
   color: rgb(255 255 255 / .7);
 }
 
@@ -251,7 +289,7 @@ img {
   display: flex;
   width: 100%;
   flex-direction: column;
-  gap: clamp(1rem, 2.5vh, 1.75rem);
+  gap: clamp(.55rem, 1.7vh, 1.15rem);
 }
 
 .maipal-copy { width: 100%; }
@@ -261,6 +299,18 @@ img {
   width: 100%;
   justify-content: center;
 }
+
+/* Keep the copy compact enough that the larger spread can sit beneath it
+   while the active experience remains vertically centered in the viewport. */
+.maipal-copy > .mb-5 { margin-bottom: .7rem; }
+.maipal-copy > .grid { gap: 1rem; }
+.maipal-copy > .grid h4 { margin-bottom: .45rem; font-size: .72rem; }
+.maipal-copy > .grid ul { gap: .2rem; }
+.maipal-copy > .grid li { font-size: .78rem; line-height: 1.35; }
+.maipal-copy > .mt-8 { margin-top: .65rem; }
+
+.experience-card-heading h2 { line-height: 1.05; }
+.experience-card-heading p { line-height: 1.25; }
 
 .page-turn-row {
   display: grid;
@@ -293,6 +343,9 @@ img {
   /* Each source page is 16:9; a two-page spread is exactly 32:9. */
   aspect-ratio: 32 / 9;
   transform-style: preserve-3d;
+  transform: rotateX(var(--book-rx, 0deg)) rotateY(var(--book-ry, 0deg));
+  transition: transform 320ms cubic-bezier(.22, 1, .36, 1);
+  will-change: transform;
   filter: drop-shadow(0 24px 28px rgb(4 2 10 / .32));
 }
 
@@ -585,7 +638,27 @@ img {
 }
 
 @media (max-width: 640px) {
-  .page-turn-book { width: 100%; }
+  .page-turn-book {
+    width: calc(100% + 24px);
+    margin-inline: -12px;
+  }
+  /* Put the arrows on top of the spread on narrow screens so they do not
+     steal 68px from the page width.  The source pages stay at their native
+     16:9 ratio and become noticeably easier to read. */
+  .page-turn-row {
+    position: relative;
+    display: block;
+  }
+  .page-turn-row .page-turn-stage { width: 100%; }
+  .page-turn-row > .page-turn-arrow {
+    position: absolute;
+    top: 50%;
+    z-index: 12;
+    transform: translateY(-50%);
+  }
+  .page-turn-row > .page-turn-arrow:first-child { left: -4px; }
+  .page-turn-row > .page-turn-arrow:last-child { right: -4px; }
+  .page-turn-row > .page-turn-arrow:active { transform: translateY(-50%) scale(.94); }
   .maipal-layout { gap: .5rem; }
   .maipal-copy > .grid { gap: 1rem; }
   .maipal-copy > .mb-5 { margin-bottom: .75rem; }

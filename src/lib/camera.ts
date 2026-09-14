@@ -97,17 +97,19 @@ export const BOX4_CENTER = boxCenterPct(BOX4);
 export const INIT_CENTER = { cx: 0.5, cy: VIEW_H / 2 / CH };
 
 /**
- * 首页初始缩放（动态，依赖视口宽高比）。
- * 保证设计稿中 1280×832 的区域以 contain 模式完全可见：
- * - 宽屏(16:9)下，高度约束胜出→ scale < 1 → 看到的画布高度覆盖完整 832
- * - 窄屏/正方形下，宽度约束胜出→ scale = 1 → 宽度恰好填满
+ * 首页初始缩放。
+ *
+ * 舞台本身已经用 STAGE_HEIGHT_CSS 按 cover 语义计算尺寸（宽度和高度
+ * 两个方向都至少覆盖视口）。如果这里再按宽屏高度缩小一次，舞台会被
+ * 缩到视口以内，出现两侧露出深色底色、首屏比例看起来忽大忽小的问题。
+ * 因此首页从 1:1 开始，让 cover 尺寸负责铺满视口；滚动推进时再由
+ * cameraCSS / boxScale 统一接管缩放。
  */
 export function initScale(vw = 1440, vh = 900) {
-  const visibleH = Math.min(VIEW_H, (vh * CW) / vw);
-  // contain: 确保整个 CW×VIEW_H 区域可见
-  // 宽度方向 scale = CW/CW = 1 (始终满足)
-  // 高度方向 scale = visibleH/VIEW_H (宽屏时<1，表示需要缩小)
-  return Math.min(1, visibleH / VIEW_H);
+  // 参数保留以兼容调用方；首屏采用 cover，不再随宽高比缩小。
+  void vw;
+  void vh;
+  return 1;
 }
 
 /** 太阳在 hero 结束（progress=1）时的下落百分比，供 resume/work 静态渲染太阳位置对齐 */

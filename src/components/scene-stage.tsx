@@ -12,15 +12,14 @@ import { assetPath } from "../lib/asset-path";
 const pct = (v: number, base: number) => `${(v / base) * 100}%`;
 
 const LAYERS = [
-  { key: "sky", src: assetPath("parallax/sky.webp"), x: 0, y: -221, w: 1280, h: 1208, op: 1, z: 1, depth: 8, rotate: 0.018, scale: 1.06 },
-  { key: "mtn", src: assetPath("parallax/mtn.webp"), x: -41, y: 312, w: 1362, h: 810, op: 0.7, z: 3, depth: 20, rotate: 0.035, scale: 1.12 },
-  { key: "trees", src: assetPath("parallax/trees.webp"), x: -36, y: 208, w: 1477, h: 2626, op: 1, z: 4, depth: 36, rotate: 0.052, scale: 1.14 },
-  { key: "grass", src: assetPath("parallax/grass.webp"), x: -132, y: 1200, w: 1739, h: 3091, op: 1, z: 5, depth: 46, rotate: 0.062, scale: 1.14 },
+  { key: "sky", src: assetPath("parallax/sky.webp"), x: 0, y: -221, w: 1280, h: 1208, op: 1, z: 1, depth: 8, scale: 1.06 },
+  { key: "mtn", src: assetPath("parallax/mtn.webp"), x: -41, y: 312, w: 1362, h: 810, op: 0.7, z: 3, depth: 20, scale: 1.12 },
+  { key: "trees", src: assetPath("parallax/trees.webp"), x: -36, y: 208, w: 1477, h: 2626, op: 1, z: 4, depth: 36, scale: 1.14 },
+  { key: "grass", src: assetPath("parallax/grass.webp"), x: -132, y: 1200, w: 1739, h: 3091, op: 1, z: 5, depth: 46, scale: 1.14 },
 ] as const;
 
 const SUN = { x: 34, y: 327, w: 435, h: 270 };
 const SUN_DEPTH = 14;
-const SUN_ROTATE = 0.028;
 const SUN_SCALE = 1.1;
 
 // trees 现在也走 LAYERS 统一定位（坐标来自SVG中的实际位置）
@@ -89,8 +88,6 @@ export const SceneStage = forwardRef<HTMLDivElement, Props>(function SceneStage(
         height: stageHeight,
         aspectRatio: `${CW} / ${CH}`,
         transform: `translate(${txPct}%, ${tyPct}%) scale(${scale})`,
-        perspective: "1400px",
-        transformStyle: "preserve-3d",
         opacity,
       }}
     >
@@ -101,7 +98,7 @@ export const SceneStage = forwardRef<HTMLDivElement, Props>(function SceneStage(
           src={l.src}
           alt=""
           draggable={false}
-          className="pointer-events-none absolute select-none will-change-transform"
+          className="pointer-events-none absolute select-none"
           style={{
             left: pct(l.x, CW),
             top: pct(l.y, CH),
@@ -109,7 +106,10 @@ export const SceneStage = forwardRef<HTMLDivElement, Props>(function SceneStage(
             height: pct(l.h, CH),
             opacity: l.op,
             zIndex: l.z,
-            transform: `translate3d(calc(${mx} * ${-l.depth}px), calc(${my} * ${(-l.depth * 0.62).toFixed(2)}px), 0) rotateY(calc(${mx} * ${l.rotate}deg)) rotateX(calc(${my} * ${(-l.rotate * 0.7).toFixed(4)}deg)) scale(${effScale(l.scale)})`,
+            // 只做平移视差，不再对大尺寸位图做 rotateX/Y：在部分 GPU/浏览器
+            // 上，透视旋转会让透明图层反复重新栅格化，表现为首页闪烁。
+            // 平移仍然保留原有的景深跟随手感，并且在宽屏/高 DPI 下更稳定。
+            transform: `translate3d(calc(${mx} * ${-l.depth}px), calc(${my} * ${(-l.depth * 0.62).toFixed(2)}px), 0) scale(${effScale(l.scale)})`,
             transformOrigin: "50% 50%",
           }}
         />
@@ -120,14 +120,14 @@ export const SceneStage = forwardRef<HTMLDivElement, Props>(function SceneStage(
         src={assetPath("parallax/sun.webp")}
         alt=""
         draggable={false}
-        className="pointer-events-none absolute select-none will-change-transform"
+        className="pointer-events-none absolute select-none"
         style={{
           left: pct(SUN.x, CW),
           top: pct(SUN.y, CH),
           width: pct(SUN.w, CW),
           height: pct(SUN.h, CH),
           zIndex: 2,
-          transform: `translate3d(calc(${mx} * ${-SUN_DEPTH}px), calc(${sunDropPct}% + ${my} * ${(-SUN_DEPTH * 0.62).toFixed(2)}px), 0) rotateY(calc(${mx} * ${SUN_ROTATE}deg)) rotateX(calc(${my} * ${(-SUN_ROTATE * 0.7).toFixed(4)}deg)) scale(${effScale(SUN_SCALE)})`,
+          transform: `translate3d(calc(${mx} * ${-SUN_DEPTH}px), calc(${sunDropPct}% + ${my} * ${(-SUN_DEPTH * 0.62).toFixed(2)}px), 0) scale(${effScale(SUN_SCALE)})`,
           transformOrigin: "50% 50%",
         }}
       />
